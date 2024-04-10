@@ -1,168 +1,55 @@
 %% Letttura coordinate
-t1 = readtable('ulivi_in_CROP1_RGB.xlsx');
+t1 = readtable('new_data/ulivi_in_CROP1_RGB.xlsx');
 t1.Ris = [];
 t1.Cult=categorical(t1.Cult);
-color = cell(height(t1),1);
 
 
-for i=1:height(t1)
-    switch char(t1{i,"Cult"})
-        case 'Ogliarola barese'
-            color{i} = '#0000FF';
-        case 'Leccino'
-            color{i} = '#008000';
-        case 'Oliastro'
-            color{i} = '#800080';
-        case 'Nociara'
-            color{i} = '#0072BD';
-        case 'Coratina'
-            color{i} = '#EDB120';
-        case 'Cornale'
-            color{i} = '#7E2F8E';
-        case 'Frantoio'
-            color{i} = '#77AC30';
-        case 'Mele'
-            color{i} = '#4DBEEE';
-        case 'Ogliarola salentina'
-            color{i} = '#A2142F';
-        case 'Oliva rossa'
-            color{i} = '#FF0000';
-        case 'Altro'
-            color{i} = '#D95319';
-    end
-end
+t1 = table(t1.expolat, t1.expolon, t1.Cult, zeros(height(t1),1));
+t1.Properties.VariableNames = ["expolat","expolon","cult","location"];
 
-t1 = table(t1.expolat, t1.expolon, t1.Cult, categorical(color),zeros(height(t1),1));
-t1.Properties.VariableNames = ["expolat","expolon","cult","color","location"];
-
-t2 = readtable('ulivi_in_CROP2_RGB.xlsx');
+t2 = readtable('new_data/ulivi_in_CROP2_RGB.xlsx');
 t2.Ris = [];
 t2.Cult = categorical(t2.Cult);
 missingCultIndex = find(ismissing(t2.Cult));
 t2(missingCultIndex,:)=[];
-color2 = cell(height(t2),1);
 
 
-for i=1:height(t2)
-    switch char(t2{i,"Cult"})
-        case 'Ogliarola barese'
-            color2{i} = '#0000FF';
-        case 'Leccino'
-            color2{i} = '#008000';
-        case 'Oliastro'
-            color2{i} = '#800080';
-        case 'Nociara'
-            color2{i} = '#0072BD';
-        case 'Coratina'
-            color2{i} = '#EDB120';
-        case 'Cornale'
-            color2{i} = '#7E2F8E';
-        case 'Frantoio'
-            color2{i} = '#77AC30';
-        case 'Mele'
-            color2{i} = '#4DBEEE';
-        case 'Ogliarola salentina'
-            color2{i} = '#A2142F';
-        case 'Oliva rossa'
-            color2{i} = '#FF0000';
-        case 'Altro'
-            color2{i} = '#D95319';
-    end
-end
-
-t2 = table(t2.expolat, t2.expolon, t2.Cult, categorical(color2),ones(height(t2),1));
-t2.Properties.VariableNames = ["expolat","expolon","cult","color","location"];
+t2 = table(t2.expolat, t2.expolon, t2.Cult, ones(height(t2),1));
+t2.Properties.VariableNames = ["expolat","expolon","cult","location"];
 
 newT = [t1;t2];
 [cultEncoded, cultName, cultLevel] = grp2idx(newT.cult);
 newT.cult = cultEncoded;
-%%
-% disp(['T1: Ogliarola barese ', num2str(length(find(t1.cult == 'Ogliarola barese')))])
-% disp(['T1: Leccino ', num2str(length(find(t1.cult == 'Leccino')))])
-% disp(['T1: Oliastro ', num2str(length(find(t1.cult == 'Oliastro')))])
-% disp(['T1: Nociara ', num2str(length(find(t1.cult == 'Nociara')))])
-% disp(['T1: Coratina ', num2str(length(find(t1.cult == 'Coratina')))])
-% disp(['T1: Cornale ', num2str(length(find(t1.cult == 'Cornale')))])
-% disp(['T1: Frantoio ', num2str(length(find(t1.cult == 'Frantoio')))])
-% disp(['T1: Mele ', num2str(length(find(t1.cult == 'Mele')))])
-% disp(['T1: Ogliarola salentina ', num2str(length(find(t1.cult == 'Ogliarola salentina')))])
-% disp(['T1: Oliva rossa ', num2str(length(find(t1.cult == 'Oliva rossa')))])
-% disp(['T1: Altro ', num2str(length(find(t1.cult == 'Altro')))])
-% 
-% disp(['T2: Ogliarola barese ', num2str(length(find(t2.cult == 'Ogliarola barese')))])
-% disp(['T2: Leccino ', num2str(length(find(t2.cult == 'Leccino')))])
-% disp(['T2: Oliastro ', num2str(length(find(t2.cult == 'Oliastro')))])
-% disp(['T2: Nociara ', num2str(length(find(t2.cult == 'Nociara')))])
-% disp(['T2: Coratina ', num2str(length(find(t2.cult == 'Coratina')))])
-% disp(['T2: Cornale ', num2str(length(find(t2.cult == 'Cornale')))])
-% disp(['T2: Frantoio ', num2str(length(find(t2.cult == 'Frantoio')))])
-% disp(['T2: Mele ', num2str(length(find(t2.cult == 'Mele')))])
-% disp(['T2: Ogliarola salentina ', num2str(length(find(t2.cult == 'Ogliarola salentina')))])
-% disp(['T2: Oliva rossa ', num2str(length(find(t2.cult == 'Oliva rossa')))])
-% disp(['T2: Altro ', num2str(length(find(t2.cult == 'Altro')))])
-%
 %% Hypercubes
 waves=[386,400.3,405.1,409.9,414.6,419.4,424.1,430.1,436,440.8,445.6,450.3,455.1,482.4,509.7,514.5,519.2,525.2,531.1,535.8,543,550.1,559.6,569.1,620,671,675.7,680.5,685.2,690,694.7,699.4,705.4,711.3,716,720.8,725.5,730.2,735,739.7,744.5,749.2,755.1,761,781.2,801.3,930.5]';
 
-crop1=hypercube('CROP1_47.tif',waves);
+crop1=hypercube('new_data/CROP1_47.tif',waves);
 [rgbImg1, bands1] = colorize(crop1,'Method','rgb','ContrastStretching',true);
-figure
-subplot(1,2,1)
-imagesc(rgbImg1)
-title('Polignano')
 
-crop2=hypercube('CROP2_47.tif',waves);
+crop2=hypercube('new_data/CROP2_47.tif',waves);
 [rgbImg2, bands2] = colorize(crop2,'Method','rgb','ContrastStretching',true);
-subplot(1,2,2)
-imagesc(rgbImg2)
-title('Monopoli')
 
-seg_crop1 = ~logical(imread("Seg_CROP1.tif"));
-seg_crop2 = ~logical(imread("Seg_CROP2.tif"));
+seg_crop1 = ~logical(imread("new_data/Seg_CROP1.tif"));
+seg_crop2 = ~logical(imread("new_data/Seg_CROP2.tif"));
 
 %% Georaster
-[A1,R1] = readgeoraster('CROP1_47.tif','Bands',bands1);
+[A1,R1] = readgeoraster('new_data/CROP1_47.tif','Bands',bands1);
 [m1, n1, ~] = size(A1);
 proj1 = R1.ProjectedCRS;
 [x1,y1] = projfwd(proj1,t1.expolat,t1.expolon);
 A1=uint8(A1*500);
 A1(repmat(seg_crop1, [1 1 3])) = 0;
-
-
     
 figure
 subplot(1,2,1)
 mapshow(A1,R1)
 hold on
 for i=1:length(x1)
-    switch char(t1{i,"cult"})
-        case 'Ogliarola barese'
-            c1 = mapshow(x1(i),y1(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t1{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t1{i,"cult"}));
-        case 'Leccino'
-            c2 = mapshow(x1(i),y1(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t1{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t1{i,"cult"}));
-        case 'Oliastro'
-            c3 = mapshow(x1(i),y1(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t1{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t1{i,"cult"}));
-        case 'Nociara'
-            c4 = mapshow(x1(i),y1(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t1{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t1{i,"cult"}));
-        case 'Coratina'
-            c5 = mapshow(x1(i),y1(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t1{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t1{i,"cult"}));
-        case 'Cornale'
-            c6 = mapshow(x1(i),y1(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t1{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t1{i,"cult"}));
-        case 'Frantoio'
-            c7 = mapshow(x1(i),y1(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t1{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t1{i,"cult"}));
-        case 'Mele'
-            c8 = mapshow(x1(i),y1(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t1{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t1{i,"cult"}));
-        case 'Ogliarola salentina'
-            c9 = mapshow(x1(i),y1(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t1{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t1{i,"cult"}));
-        case 'Oliva rossa'
-            c10 = mapshow(x1(i),y1(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t1{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t1{i,"cult"}));
-        case 'Altro'
-            c11 = mapshow(x1(i),y1(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t1{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t1{i,"cult"}));
-    end
+    mapshow(x1(i),y1(i),DisplayType="point",Marker="o",MarkerFaceColor="g",MarkerEdgeColor="none");
 end
 title("Polignano")
 hold off
-[A2,R2] = readgeoraster('CROP2_47.tif','Bands',bands2);
+[A2,R2] = readgeoraster('new_data/CROP2_47.tif','Bands',bands2);
 [m2, n2, ~] = size(A2);
 proj2 = R2.ProjectedCRS;
 [x2,y2] = projfwd(proj2,t2.expolat,t2.expolon);
@@ -172,36 +59,10 @@ subplot(1,2,2)
 mapshow(A2,R2)
 hold on
 for i=1:length(x2)
-    switch char(t2{i,"cult"})
-        case 'Ogliarola barese'
-            c1 = mapshow(x2(i),y2(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t2{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t2{i,"cult"}));
-        case 'Leccino'
-            c2 = mapshow(x2(i),y2(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t2{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t2{i,"cult"}));
-        case 'Oliastro'
-            c3 = mapshow(x2(i),y2(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t2{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t2{i,"cult"}));
-        case 'Nociara'
-            c4 = mapshow(x2(i),y2(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t2{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t2{i,"cult"}));
-        case 'Coratina'
-            c5 = mapshow(x2(i),y2(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t2{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t2{i,"cult"}));
-        case 'Cornale'
-            c6 = mapshow(x2(i),y2(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t2{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t2{i,"cult"}));
-        case 'Frantoio'
-            c7 = mapshow(x2(i),y2(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t2{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t2{i,"cult"}));
-        case 'Mele'
-            c8 = mapshow(x2(i),y2(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t2{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t2{i,"cult"}));
-        case 'Ogliarola salentina'
-            c9 = mapshow(x2(i),y2(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t2{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t2{i,"cult"}));
-        case 'Oliva rossa'
-            c10 = mapshow(x2(i),y2(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t2{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t2{i,"cult"}));
-        case 'Altro'
-            c11 = mapshow(x2(i),y2(i),DisplayType="point",Marker="o",MarkerFaceColor=char(t2{i,"color"}),MarkerEdgeColor="none",DisplayName=char(t2{i,"cult"}));
-    end
-    
+    mapshow(x2(i),y2(i),DisplayType="point",Marker="o",MarkerFaceColor="g",MarkerEdgeColor="none");
 end
 title("Monopoli")
 hold off
-legend([c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11])
-clear c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11
 %% Da cartesiane a pixel
 
 [newX1, newY1] = worldToIntrinsic(R1,x1,y1);
@@ -249,7 +110,6 @@ newA1 = A1;
 newA1(repmat(mask1, [1 1 3])) = 255;
 
 grayA2 = im2gray(A2);
-raggio = 10;
 
 [I, J] = ndgrid(1:m2, 1:n2);
 
@@ -288,7 +148,7 @@ subplot(1,2,2)
 imshow(newA2)
 title('Monopoli')
 
-%%
+
 [row1, col1] = find(cultLabel1 == 1);
 [row2, col2] = find(cultLabel1 == 2);
 [row3, col3] = find(cultLabel1 == 3);
@@ -301,6 +161,7 @@ title('Monopoli')
 [row10, col10] = find(cultLabel1 == 10);
 [row11, col11] = find(cultLabel1 == 11);
 figure
+subplot(1,2,1)
 imshow(rgbImg1)
 hold on
 c1 = plot(col1, row1, '.', 'MarkerSize', 7,'Color', '#D95319','DisplayName','Altro');
@@ -330,7 +191,7 @@ clear c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11
 [row9, col9] = find(cultLabel2 == 9);
 [row10, col10] = find(cultLabel2 == 10);
 [row11, col11] = find(cultLabel2 == 11);
-figure
+subplot(1,2,2)
 imshow(rgbImg2)
 hold on
 c1 = plot(col1, row1, '.', 'MarkerSize', 7,'Color', '#D95319','DisplayName','Altro');
@@ -457,3 +318,43 @@ subplot(1,2,2);
 imagesc(saviImg2);
 colorbar
 title('SAVI Monopoli')
+%% Creazione Dataset
+notTerrain1 = find(cultLabel1);
+[rowDataset1, colDataset1] = ind2sub(size(cultLabel1),notTerrain1);
+
+green = crop1.DataCube(:,:,22);
+red = crop1.DataCube(:,:,26);
+redEdge = crop1.DataCube(:,:,37);
+nir = crop1.DataCube(:,:,46);
+
+dataset1 = table(ndviImg1(notTerrain1),evi2Img1(notTerrain1),cireImg1(notTerrain1),gndviImg1(notTerrain1),grviImg1(notTerrain1),psriImg1(notTerrain1),renImg1(notTerrain1),saviImg1(notTerrain1), ...
+    green(notTerrain1), red(notTerrain1), redEdge(notTerrain1), nir(notTerrain1), rowDataset1, colDataset1, treeLabel1(notTerrain1),zeros(size(notTerrain1)),...
+    'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','row','col','treenum','place'});
+
+notTerrain2 = find(cultLabel2);
+[rowDataset2, colDataset2] = ind2sub(size(cultLabel2),notTerrain2);
+
+green = crop2.DataCube(:,:,22);
+red = crop2.DataCube(:,:,26);
+redEdge = crop2.DataCube(:,:,37);
+nir = crop2.DataCube(:,:,46);
+
+dataset2 = table(ndviImg2(notTerrain2),evi2Img2(notTerrain2),cireImg2(notTerrain2),gndviImg2(notTerrain2),grviImg2(notTerrain2),psriImg2(notTerrain2),renImg2(notTerrain2),saviImg2(notTerrain2), ...
+    green(notTerrain2), red(notTerrain2), redEdge(notTerrain2), nir(notTerrain2), rowDataset2, colDataset2, treeLabel2(notTerrain2),ones(size(notTerrain2)),...
+    'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','row','col','treenum','place'});
+dataset = [dataset1; dataset2];
+labels = [notTerrain1; notTerrain2];
+%% Outlier removal
+[datasetWitoutOutliers, outIdx]= rmoutliers(dataset{:,1:12});
+datasetWitoutOutliers = [datasetWitoutOutliers, dataset.row(~outIdx), dataset.col(~outIdx), dataset.treenum(~outIdx), dataset.place(~outIdx)];
+newDataset = array2table(datasetWitoutOutliers,'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','row','col','treenum','place'});
+newLabels = labels(~outIdx);
+skewnessBefore = skewness(dataset{:,1:12});
+%% Skewness ndvi prima e dopo la rimozione degli outlier
+skewnessAfter = skewness(dataset{:,1:12});
+figure
+histogram(dataset.ndvi,'DisplayName','Originale','FaceColor','blue');
+hold on
+histogram(newDataset.ndvi,'DisplayName','Con outlier rimossi','FaceColor','red');
+legend
+hold off
