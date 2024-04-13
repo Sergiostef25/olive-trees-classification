@@ -209,6 +209,65 @@ title("Monopoli")
 hold off
 legend([c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11])
 clear c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11
+%% Maschera HSV per eliminare il terreno dall'immagine segmentata Polignano 
+newRgbImg1 = rgbImg1;
+newRgbImg1(repmat(mask1, [1 1 3])) = 255;
+hsvImg = rgb2hsv(newRgbImg1);
+% tonalità
+hue = hsvImg(:,:,1);
+% per visualizzare al meglio l'istogramma delle tonalità
+% i pixel di valore 0 (nero) non vengono visualizzati
+
+X = hue(hue ~= 0);
+% figure
+% imhist(X)
+
+% Soglie impostata vedendo l'istogramma
+maschera_marrone1 =  hsvImg(:,:,1) <= 0.18 | hsvImg(:,:,1) >= 0.45;
+newRgbImgNoOut1 = newRgbImg1;
+newRgbImgNoOut1(repmat(maschera_marrone1, [1 1 3])) = 255;
+
+
+figure
+subplot(1,3,1)
+imshow(newRgbImg1)
+title('With terrain')
+subplot(1,3,2)
+imshow(newRgbImgNoOut1)
+title('Without terrain')
+subplot(1,3,3)
+imshowpair(newRgbImg1,newRgbImgNoOut1)
+title('Differences')
+
+newRgbImg2 = rgbImg2;
+newRgbImg2(repmat(mask2, [1 1 3])) = 255;
+hsvImg = rgb2hsv(newRgbImg2);
+% tonalità
+hue = hsvImg(:,:,1);
+% per visualizzare al meglio l'istogramma delle tonalità
+% i pixel di valore 0 (nero) non vengono visualizzati
+
+X = hue(hue ~= 0);
+% figure
+% imhist(X)
+
+% Soglie impostata vedendo l'istogramma
+maschera_marrone2 =  hsvImg(:,:,1) <= 0.18 | hsvImg(:,:,1) >= 0.45;
+newRgbImgNoOut2 = newRgbImg2;
+newRgbImgNoOut2(repmat(maschera_marrone2, [1 1 3])) = 255;
+
+
+figure
+subplot(1,3,1)
+imshow(newRgbImg2)
+title('With terrain')
+subplot(1,3,2)
+imshow(newRgbImgNoOut2)
+title('Without terrain')
+subplot(1,3,3)
+imshowpair(newRgbImg2,newRgbImgNoOut2)
+title('Differences')
+
 %% CalcoloVI
 ndviImg1 = computeVIs(crop1, 'ndvi');
 evi2Img1 = computeVIs(crop1 , 'evi2');
@@ -319,37 +378,49 @@ imagesc(saviImg2);
 colorbar
 title('SAVI Monopoli')
 %% Creazione Dataset
-notTerrain1 = find(cultLabel1);
-[rowDataset1, colDataset1] = ind2sub(size(cultLabel1),notTerrain1);
+notTerrIdx1 = find(cultLabel1);
+[rowDataset1, colDataset1] = ind2sub(size(cultLabel1),notTerrIdx1);
 
 green = crop1.DataCube(:,:,22);
 red = crop1.DataCube(:,:,26);
 redEdge = crop1.DataCube(:,:,37);
 nir = crop1.DataCube(:,:,46);
 
-dataset1 = table(ndviImg1(notTerrain1),evi2Img1(notTerrain1),cireImg1(notTerrain1),gndviImg1(notTerrain1),grviImg1(notTerrain1),psriImg1(notTerrain1),renImg1(notTerrain1),saviImg1(notTerrain1), ...
-    green(notTerrain1), red(notTerrain1), redEdge(notTerrain1), nir(notTerrain1), rowDataset1, colDataset1, treeLabel1(notTerrain1),zeros(size(notTerrain1)),...
+dataset1 = table(ndviImg1(notTerrIdx1),evi2Img1(notTerrIdx1),cireImg1(notTerrIdx1),gndviImg1(notTerrIdx1),grviImg1(notTerrIdx1),psriImg1(notTerrIdx1),renImg1(notTerrIdx1),saviImg1(notTerrIdx1), ...
+    green(notTerrIdx1), red(notTerrIdx1), redEdge(notTerrIdx1), nir(notTerrIdx1), rowDataset1, colDataset1, treeLabel1(notTerrIdx1),zeros(size(notTerrIdx1)),...
     'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','row','col','treenum','place'});
 
-notTerrain2 = find(cultLabel2);
-[rowDataset2, colDataset2] = ind2sub(size(cultLabel2),notTerrain2);
+notTerrIdx2 = find(cultLabel2);
+[rowDataset2, colDataset2] = ind2sub(size(cultLabel2),notTerrIdx2);
 
 green = crop2.DataCube(:,:,22);
 red = crop2.DataCube(:,:,26);
 redEdge = crop2.DataCube(:,:,37);
 nir = crop2.DataCube(:,:,46);
 
-dataset2 = table(ndviImg2(notTerrain2),evi2Img2(notTerrain2),cireImg2(notTerrain2),gndviImg2(notTerrain2),grviImg2(notTerrain2),psriImg2(notTerrain2),renImg2(notTerrain2),saviImg2(notTerrain2), ...
-    green(notTerrain2), red(notTerrain2), redEdge(notTerrain2), nir(notTerrain2), rowDataset2, colDataset2, treeLabel2(notTerrain2),ones(size(notTerrain2)),...
+dataset2 = table(ndviImg2(notTerrIdx2),evi2Img2(notTerrIdx2),cireImg2(notTerrIdx2),gndviImg2(notTerrIdx2),grviImg2(notTerrIdx2),psriImg2(notTerrIdx2),renImg2(notTerrIdx2),saviImg2(notTerrIdx2), ...
+    green(notTerrIdx2), red(notTerrIdx2), redEdge(notTerrIdx2), nir(notTerrIdx2), rowDataset2, colDataset2, treeLabel2(notTerrIdx2),ones(size(notTerrIdx2)),...
     'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','row','col','treenum','place'});
 dataset = [dataset1; dataset2];
-labels = [notTerrain1; notTerrain2];
+
 %% Outlier removal
 [datasetWitoutOutliers, outIdx]= rmoutliers(dataset{:,1:12});
 datasetWitoutOutliers = [datasetWitoutOutliers, dataset.row(~outIdx), dataset.col(~outIdx), dataset.treenum(~outIdx), dataset.place(~outIdx)];
 newDataset = array2table(datasetWitoutOutliers,'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','row','col','treenum','place'});
-newLabels = labels(~outIdx);
+outIdx1 = outIdx(1:length(notTerrIdx1));
+outIdx2 = outIdx(length(notTerrIdx1)+1:length(outIdx));
+newNotTerrIdx1 = notTerrIdx1(~outIdx1);
+newNotTerrIdx2 = notTerrIdx2(~outIdx2);
+newNotTerrIdx = [newNotTerrIdx1; newNotTerrIdx2];
 skewnessBefore = skewness(dataset{:,1:12});
+%%
+cultLabel2NEW = cultLabel2;
+cultLabel2NEW(newNotTerrIdx2)=0;
+figure
+subplot(1,2,1)
+imshow(cultLabel2NEW)
+subplot(1,2,2)
+imshow(cultLabel2)
 %% Skewness ndvi prima e dopo la rimozione degli outlier
 skewnessAfter = skewness(dataset{:,1:12});
 figure
@@ -358,5 +429,3 @@ hold on
 histogram(newDataset.ndvi,'DisplayName','Con outlier rimossi','FaceColor','red');
 legend
 hold off
-
-title('prova')
