@@ -358,3 +358,4 @@ hold on
 histogram(newDataset.ndvi,'DisplayName','Con outlier rimossi','FaceColor','red');
 legend
 hold off
+title('Skewness')
