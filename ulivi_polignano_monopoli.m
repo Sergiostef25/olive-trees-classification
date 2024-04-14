@@ -64,7 +64,6 @@ end
 title("Monopoli")
 hold off
 %% Da cartesiane a pixel
-
 [newX1, newY1] = worldToIntrinsic(R1,x1,y1);
 newX1 = round(newX1);
 newY1 = round(newY1);
@@ -208,8 +207,9 @@ c11 = plot(col11, row11, '.', 'MarkerSize', 7,'Color', '#FF0000','DisplayName','
 title("Monopoli")
 hold off
 legend([c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11])
-clear c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11
-%% Maschera HSV per eliminare il terreno dall'immagine segmentata Polignano 
+clear c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 col1 col2 col3 col4 col5 col6 col7 col8 col9 col10 col11
+clear row1 row2 row3 row4 row5 row6 row7 row8 row9 row10 row11
+%% Maschera HSV per eliminare il terreno dall'immagine segmentata 
 newRgbImg1 = rgbImg1;
 newRgbImg1(repmat(mask1, [1 1 3])) = 255;
 hsvImg = rgb2hsv(newRgbImg1);
@@ -223,21 +223,21 @@ X = hue(hue ~= 0);
 % imhist(X)
 
 % Soglie impostata vedendo l'istogramma
-maschera_marrone1 =  hsvImg(:,:,1) <= 0.18 | hsvImg(:,:,1) >= 0.45;
+terrainMask1 =  hsvImg(:,:,1) <= 0.18 | hsvImg(:,:,1) >= 0.45;
 newRgbImgNoOut1 = newRgbImg1;
-newRgbImgNoOut1(repmat(maschera_marrone1, [1 1 3])) = 255;
+newRgbImgNoOut1(repmat(terrainMask1, [1 1 3])) = 255;
 
 
 figure
-subplot(1,3,1)
+subplot(2,3,1)
 imshow(newRgbImg1)
-title('With terrain')
-subplot(1,3,2)
+title('Polignano with terrain')
+subplot(2,3,2)
 imshow(newRgbImgNoOut1)
-title('Without terrain')
-subplot(1,3,3)
+title('Polignano without terrain')
+subplot(2,3,3)
 imshowpair(newRgbImg1,newRgbImgNoOut1)
-title('Differences')
+title('Polignano differences')
 
 newRgbImg2 = rgbImg2;
 newRgbImg2(repmat(mask2, [1 1 3])) = 255;
@@ -252,22 +252,32 @@ X = hue(hue ~= 0);
 % imhist(X)
 
 % Soglie impostata vedendo l'istogramma
-maschera_marrone2 =  hsvImg(:,:,1) <= 0.18 | hsvImg(:,:,1) >= 0.45;
+terrainMask2 =  hsvImg(:,:,1) <= 0.18 | hsvImg(:,:,1) >= 0.45;
 newRgbImgNoOut2 = newRgbImg2;
-newRgbImgNoOut2(repmat(maschera_marrone2, [1 1 3])) = 255;
+newRgbImgNoOut2(repmat(terrainMask2, [1 1 3])) = 255;
 
 
-figure
-subplot(1,3,1)
+subplot(2,3,4)
 imshow(newRgbImg2)
-title('With terrain')
-subplot(1,3,2)
+title('Monopoli with terrain')
+subplot(2,3,5)
 imshow(newRgbImgNoOut2)
-title('Without terrain')
-subplot(1,3,3)
+title('Monopoli without terrain')
+subplot(2,3,6)
 imshowpair(newRgbImg2,newRgbImgNoOut2)
-title('Differences')
+title('Monopoli differences')
 
+newCultLabel1 = cultLabel1;
+newCultLabel1(terrainMask1) = 0;
+
+mask1 = mask1 | terrainMask1;
+newA1(repmat(mask1, [1 1 3])) = 255;
+
+newCultLabel2 = cultLabel2;
+newCultLabel2(terrainMask2) = 0;
+
+mask2 = mask2 | terrainMask2;
+newA2(repmat(mask2, [1 1 3])) = 255;
 %% CalcoloVI
 ndviImg1 = computeVIs(crop1, 'ndvi');
 evi2Img1 = computeVIs(crop1 , 'evi2');
@@ -402,30 +412,3 @@ dataset2 = table(ndviImg2(notTerrIdx2),evi2Img2(notTerrIdx2),cireImg2(notTerrIdx
     green(notTerrIdx2), red(notTerrIdx2), redEdge(notTerrIdx2), nir(notTerrIdx2), rowDataset2, colDataset2, treeLabel2(notTerrIdx2),ones(size(notTerrIdx2)),...
     'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','row','col','treenum','place'});
 dataset = [dataset1; dataset2];
-
-%% Outlier removal
-[datasetWitoutOutliers, outIdx]= rmoutliers(dataset{:,1:12});
-datasetWitoutOutliers = [datasetWitoutOutliers, dataset.row(~outIdx), dataset.col(~outIdx), dataset.treenum(~outIdx), dataset.place(~outIdx)];
-newDataset = array2table(datasetWitoutOutliers,'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','row','col','treenum','place'});
-outIdx1 = outIdx(1:length(notTerrIdx1));
-outIdx2 = outIdx(length(notTerrIdx1)+1:length(outIdx));
-newNotTerrIdx1 = notTerrIdx1(~outIdx1);
-newNotTerrIdx2 = notTerrIdx2(~outIdx2);
-newNotTerrIdx = [newNotTerrIdx1; newNotTerrIdx2];
-skewnessBefore = skewness(dataset{:,1:12});
-%%
-cultLabel2NEW = cultLabel2;
-cultLabel2NEW(newNotTerrIdx2)=0;
-figure
-subplot(1,2,1)
-imshow(cultLabel2NEW)
-subplot(1,2,2)
-imshow(cultLabel2)
-%% Skewness ndvi prima e dopo la rimozione degli outlier
-skewnessAfter = skewness(dataset{:,1:12});
-figure
-histogram(dataset.ndvi,'DisplayName','Originale','FaceColor','blue');
-hold on
-histogram(newDataset.ndvi,'DisplayName','Con outlier rimossi','FaceColor','red');
-legend
-hold off
