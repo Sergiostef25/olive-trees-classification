@@ -148,6 +148,7 @@ imshow(newA2)
 title('Monopoli')
 
 
+
 [row1, col1] = find(cultLabel1 == 1);
 [row2, col2] = find(cultLabel1 == 2);
 [row3, col3] = find(cultLabel1 == 3);
@@ -267,17 +268,20 @@ subplot(2,3,6)
 imshowpair(newRgbImg2,newRgbImgNoOut2)
 title('Monopoli differences')
 
-newCultLabel1 = cultLabel1;
-newCultLabel1(terrainMask1) = 0;
+
+cultLabel1(terrainMask1) = 0;
+treeLabel1(terrainMask1) = 0;
 
 mask1 = mask1 | terrainMask1;
 newA1(repmat(mask1, [1 1 3])) = 255;
 
-newCultLabel2 = cultLabel2;
-newCultLabel2(terrainMask2) = 0;
+
+cultLabel2(terrainMask2) = 0;
+treeLabel2(terrainMask2) = 0;
 
 mask2 = mask2 | terrainMask2;
 newA2(repmat(mask2, [1 1 3])) = 255;
+
 %% CalcoloVI
 ndviImg1 = computeVIs(crop1, 'ndvi');
 evi2Img1 = computeVIs(crop1 , 'evi2');
@@ -314,101 +318,85 @@ grviImg2(mask2)=0;
 psriImg2(mask2)=0;
 renImg2(mask2)=0;
 saviImg2(mask2)=0;
+%% Merge immagine
+additionNewA1 = zeros(m2-m1,n1,3);
+additionNewA1(:) = 255;
+mergedRgbImg = cat(2, [newA1; additionNewA1], newA2);
+figure
+imshow(mergedRgbImg)
+title('Polignano and Monopoli merged')
+
+mergedCultLabel = cat(2, [cultLabel1; zeros(m2-m1,n1)], cultLabel2);
+mergedTreeLabel = cat(2, [treeLabel1; zeros(m2-m1,n1)], treeLabel2);
+
+
+ndviImg = cat(2, [ndviImg1; zeros(m2-m1,n1)], ndviImg2);
+clear ndviImg1 ndviImg2
+evi2Img = cat(2, [evi2Img1; zeros(m2-m1,n1)], evi2Img2);
+clear evi2Img1 evi2Img2
+cireImg = cat(2, [cireImg1; zeros(m2-m1,n1)], cireImg2);
+clear cireImg1 cireImg2
+gndviImg = cat(2, [gndviImg1; zeros(m2-m1,n1)], gndviImg2);
+clear gndviImg1 gndviImg2
+grviImg = cat(2, [grviImg1; zeros(m2-m1,n1)], grviImg2);
+clear grviImg1 grviImg2
+psriImg = cat(2, [psriImg1; zeros(m2-m1,n1)], psriImg2);
+clear psriImg1 psriImg2
+renImg = cat(2, [renImg1; zeros(m2-m1,n1)], renImg2);
+clear renImg1 renImg2
+saviImg = cat(2, [saviImg1; zeros(m2-m1,n1)], saviImg2);
+clear saviImg1 saviImg2;
+
 %% Visualizza VI
 figure
-subplot(1,2,1);
-imagesc(ndviImg1);
-title('NDVI Polignano')
-subplot(1,2,2);
-imagesc(ndviImg2);
+imagesc(ndviImg);
 colorbar
-title('NDVI Monopoli')
+title('NDVI')
 
 figure
-subplot(1,2,1);
-imagesc(evi2Img1);
-title('EVI2 Polignano')
-subplot(1,2,2);
-imagesc(evi2Img2);
+imagesc(evi2Img);
 colorbar
-title('EVI2 Monopoli')
+title('EVI2')
 
 figure
-subplot(1,2,1);
-imagesc(cireImg1);
-title('CIRE Poligano')
-subplot(1,2,2);
-imagesc(cireImg2);
+imagesc(cireImg);
 colorbar
-title('CIRE Monopoli')
+title('CIRE')
 
 figure
-subplot(1,2,1);
-imagesc(gndviImg1);
-title('GNDVI Polignano')
-subplot(1,2,2);
-imagesc(gndviImg2);
+imagesc(gndviImg);
 colorbar
-title('GNDVI Monopoli')
+title('GNDVI')
 
 figure
-subplot(1,2,1);
-imagesc(grviImg1);
-title('GRVI Polignano')
-subplot(1,2,2);
-imagesc(grviImg2);
+imagesc(grviImg);
 colorbar
-title('GRVI Monopoli')
-
+title('GRVI')
 
 figure
-subplot(1,2,1);
-imagesc(psriImg1, [0, 1]);
-title('PSRI Polignano')
-subplot(1,2,2);
-imagesc(psriImg2, [0, 1]);
+imagesc(psriImg, [0, 1]);
 colorbar
-title('PSRI Monopoli')
+title('PSRI')
 
 figure
-subplot(1,2,1);
-imagesc(renImg1);
-title('REN Polignano')
-subplot(1,2,2);
-imagesc(renImg2);
+imagesc(renImg);
 colorbar
-title('REN Monopoli')
+title('REN')
 
 figure
-subplot(1,2,1);
-imagesc(saviImg1);
-title('SAVI Polignano')
-subplot(1,2,2);
-imagesc(saviImg2);
+imagesc(saviImg);
 colorbar
-title('SAVI Monopoli')
+title('SAVI')
 %% Creazione Dataset
-notTerrIdx1 = find(cultLabel1);
-[rowDataset1, colDataset1] = ind2sub(size(cultLabel1),notTerrIdx1);
+notTerrIdx = find(mergedCultLabel);
+[rowDataset, colDataset] = ind2sub(size(mergedCultLabel),notTerrIdx);
 
-green = crop1.DataCube(:,:,22);
-red = crop1.DataCube(:,:,26);
-redEdge = crop1.DataCube(:,:,37);
-nir = crop1.DataCube(:,:,46);
+green = cat(2, [crop1.DataCube(:,:,22); zeros(m2-m1,n1)], crop2.DataCube(:,:,22));
+red = cat(2, [crop1.DataCube(:,:,26); zeros(m2-m1,n1)], crop2.DataCube(:,:,26));
+redEdge = cat(2, [crop1.DataCube(:,:,37); zeros(m2-m1,n1)], crop2.DataCube(:,:,37));
+nir = cat(2, [crop1.DataCube(:,:,46); zeros(m2-m1,n1)], crop2.DataCube(:,:,46));
 
-dataset1 = table(ndviImg1(notTerrIdx1),evi2Img1(notTerrIdx1),cireImg1(notTerrIdx1),gndviImg1(notTerrIdx1),grviImg1(notTerrIdx1),psriImg1(notTerrIdx1),renImg1(notTerrIdx1),saviImg1(notTerrIdx1), ...
-    green(notTerrIdx1), red(notTerrIdx1), redEdge(notTerrIdx1), nir(notTerrIdx1), rowDataset1, colDataset1, treeLabel1(notTerrIdx1),zeros(size(notTerrIdx1)),...
+dataset = table(ndviImg(notTerrIdx),evi2Img(notTerrIdx),cireImg(notTerrIdx),gndviImg(notTerrIdx),grviImg(notTerrIdx),psriImg(notTerrIdx),renImg(notTerrIdx),saviImg(notTerrIdx), ...
+    green(notTerrIdx), red(notTerrIdx), redEdge(notTerrIdx), nir(notTerrIdx), rowDataset, colDataset, mergedTreeLabel(notTerrIdx),zeros(size(notTerrIdx)),...
     'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','row','col','treenum','place'});
-
-notTerrIdx2 = find(cultLabel2);
-[rowDataset2, colDataset2] = ind2sub(size(cultLabel2),notTerrIdx2);
-
-green = crop2.DataCube(:,:,22);
-red = crop2.DataCube(:,:,26);
-redEdge = crop2.DataCube(:,:,37);
-nir = crop2.DataCube(:,:,46);
-
-dataset2 = table(ndviImg2(notTerrIdx2),evi2Img2(notTerrIdx2),cireImg2(notTerrIdx2),gndviImg2(notTerrIdx2),grviImg2(notTerrIdx2),psriImg2(notTerrIdx2),renImg2(notTerrIdx2),saviImg2(notTerrIdx2), ...
-    green(notTerrIdx2), red(notTerrIdx2), redEdge(notTerrIdx2), nir(notTerrIdx2), rowDataset2, colDataset2, treeLabel2(notTerrIdx2),ones(size(notTerrIdx2)),...
-    'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','row','col','treenum','place'});
-dataset = [dataset1; dataset2];
+%% Creazione Training e Test set
