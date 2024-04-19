@@ -9,6 +9,9 @@ oliveTreesTable.cult = cultEncoded;
 
 clear cultEncoded
 %% Hypercubes
+% lettura hypercube utili per estrapolare le informazioni iperspettrali
+% delle immagin, sopratutto per visulaizzare le immagini in RGB
+
 waves=[386,400.3,405.1,409.9,414.6,419.4,424.1,430.1,436,440.8,445.6,450.3,455.1,482.4,509.7,514.5,519.2,525.2,531.1,535.8,543,550.1,559.6,569.1,620,671,675.7,680.5,685.2,690,694.7,699.4,705.4,711.3,716,720.8,725.5,730.2,735,739.7,744.5,749.2,755.1,761,781.2,801.3,930.5]';
 
 crop1=hypercube('new_data/CROP1_47.tif',waves);
@@ -17,41 +20,15 @@ crop1=hypercube('new_data/CROP1_47.tif',waves);
 crop2=hypercube('new_data/CROP2_47.tif',waves);
 [rgbImg2, bands2] = colorize(crop2,'Method','rgb','ContrastStretching',true);
 
-seg_crop1 = ~logical(imread("new_data/Seg_CROP1.tif"));
-seg_crop2 = ~logical(imread("new_data/Seg_CROP2.tif"));
+
 
 %% Georaster
-
-[A1,R1] = readgeoraster('new_data/CROP1_47.tif','Bands',bands1);
+[A1, R1, A2, R2, x1, y1, x2, y2] = readGeoRefOliveTrees(oliveTreesTable, ...
+    'new_data/CROP1_47.tif','new_data/Seg_CROP1.tif',bands1, ...
+    'new_data/CROP2_47.tif','new_data/Seg_CROP2.tif',bands2, true);
 [m1, n1, ~] = size(A1);
-proj1 = R1.ProjectedCRS;
-[x1,y1] = projfwd(proj1,polignanoTable.expolat,polignanoTable.expolon);
-A1=uint8(A1*500);
-A1(repmat(seg_crop1, [1 1 3])) = 0;
-    
-figure
-subplot(1,2,1)
-mapshow(A1,R1)
-hold on
-for i=1:length(x1)
-    mapshow(x1(i),y1(i),DisplayType="point",Marker="o",MarkerFaceColor="g",MarkerEdgeColor="none");
-end
-title("Polignano")
-hold off
-[A2,R2] = readgeoraster('new_data/CROP2_47.tif','Bands',bands2);
 [m2, n2, ~] = size(A2);
-proj2 = R2.ProjectedCRS;
-[x2,y2] = projfwd(proj2,monopoliTable.expolat,monopoliTable.expolon);
-A2=uint8(A2*500);
-A2(repmat(seg_crop2, [1 1 3])) = 0;
-subplot(1,2,2)
-mapshow(A2,R2)
-hold on
-for i=1:length(x2)
-    mapshow(x2(i),y2(i),DisplayType="point",Marker="o",MarkerFaceColor="g",MarkerEdgeColor="none");
-end
-title("Monopoli")
-hold off
+
 %% Da cartesiane a pixel
 [newX1, newY1] = worldToIntrinsic(R1,x1,y1);
 newX1 = round(newX1);
