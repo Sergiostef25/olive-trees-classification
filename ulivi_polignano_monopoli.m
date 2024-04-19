@@ -90,7 +90,7 @@ clear ndviImg1 ndviImg2 evi2Img1 evi2Img2 cireImg1 cireImg2 gndviImg1 gndviImg2 
 
 %% Creazione Dataset
 notTerrainIdx = find(cultLabel);
-[rowDataset, colDataset] = ind2sub(size(cultLabel),notTerrainIdx);
+labels = cultLabel(notTerrainIdx);
 
 green = cat(2, [crop1.DataCube(:,:,22); zeros(m2-m1,n1)], crop2.DataCube(:,:,22));
 red = cat(2, [crop1.DataCube(:,:,26); zeros(m2-m1,n1)], crop2.DataCube(:,:,26));
@@ -98,8 +98,17 @@ redEdge = cat(2, [crop1.DataCube(:,:,37); zeros(m2-m1,n1)], crop2.DataCube(:,:,3
 nir = cat(2, [crop1.DataCube(:,:,46); zeros(m2-m1,n1)], crop2.DataCube(:,:,46));
 
 dataset = table(ndviImg(notTerrainIdx),evi2Img(notTerrainIdx),cireImg(notTerrainIdx),gndviImg(notTerrainIdx),grviImg(notTerrainIdx),psriImg(notTerrainIdx),renImg(notTerrainIdx),saviImg(notTerrainIdx), ...
-    green(notTerrainIdx), red(notTerrainIdx), redEdge(notTerrainIdx), nir(notTerrainIdx), rowDataset, colDataset, treeLabel(notTerrainIdx),zeros(size(notTerrainIdx)),...
-    'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','row','col','treenum','place'});
+    green(notTerrainIdx), red(notTerrainIdx), redEdge(notTerrainIdx), nir(notTerrainIdx), treeLabel(notTerrainIdx),notTerrainIdx,labels,...
+    'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','treenum','index','labels'});
 %% Creazione Training e Test set
+[XTrainSet, XTestSet] = createAndDisplayTrainTestSet(dataset, 0.7, rgbImg);
 
+%% Normalizzazione del dataset
+XTrainSetMean = mean(XTrainSet{:,1:12});
+XTrainSetStd = std(XTrainSet{:,1:12});
 
+% Normalizzazione Z-score per il set di addestramento
+XTrainSet{:,1:12} = (XTrainSet{:,1:12} - XTrainSetMean) ./ XTrainSetStd;
+
+% Applica la stessa normalizzazione al set di test
+XTestSet{:,1:12} = (XTestSet{:,1:12} - XTrainSetMean) ./ XTrainSetStd;
