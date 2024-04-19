@@ -7,6 +7,10 @@ oliveTreesTable.cult = cultEncoded;
 
 [oliveTreesTable, cultNameAndCount] = removeLowCountTrees(oliveTreesTable, cultNameAndCount);
 
+% rifaccio l'encoding dopo la rimozione di alcune categorie
+cultEncoded = grp2idx(oliveTreesTable.cult);
+oliveTreesTable.cult = cultEncoded;
+
 clear cultEncoded
 %% Hypercubes
 % lettura hypercube utili per estrapolare le informazioni iperspettrali
@@ -25,7 +29,8 @@ crop2=hypercube('new_data/CROP2_47.tif',waves);
 %% Georaster
 [A1, R1, A2, R2, x1, y1, x2, y2] = readGeoRefOliveTrees(oliveTreesTable, ...
     'new_data/CROP1_47.tif','new_data/Seg_CROP1.tif',bands1, ...
-    'new_data/CROP2_47.tif','new_data/Seg_CROP2.tif',bands2, true);
+    'new_data/CROP2_47.tif','new_data/Seg_CROP2.tif',bands2, false);
+
 [m1, n1, ~] = size(A1);
 [m2, n2, ~] = size(A2);
 
@@ -37,150 +42,15 @@ newY1 = round(newY1);
 newX2 = round(newX2);
 newY2 = round(newY2);
 
-grayA1 = im2gray(A1);
-raggio = 10;
-
-
-[I, J] = ndgrid(1:m1, 1:n1);
-
-mask1 = false(m1, n1);
-% label di conteggio albero
-treeLabel1 = zeros(m1,n1);
-% label del tipo di coltura
-cultLabel1 = zeros(m1,n1);
-
+radius = 10;
 treeNum = 1;
 
-for i = 1:length(newX1)
-    % distanza euclidea
-    distanza = sqrt((I - newY1(i)).^2 + (J - newX1(i)).^2);
-    cultLabel1(distanza <= raggio) = oliveTreesTable{i,"cult"};
-    treeLabel1(distanza <= raggio) = treeNum;
-    treeNum = treeNum + 1;
-    mask1 = mask1 | (distanza <= raggio);
-end
+[newA1, mask1, treeLabel1, cultLabel1, treeNum] = refineSegmentation(A1,oliveTreesTable, newX1, newY1, radius, treeNum);
 
-mask1 = ~mask1;
-
-% qui con l'ausilio dell'mmagine in scala di grigi
-% trasformiamo i 'cerchi' che individuano gli alberi
-% dello step precedente, nella forma delle loro chiome
-
-for i=1:m1
-    for j=1:n1
-        if grayA1(i,j) == 0
-            mask1(i,j) = 1;
-            cultLabel1(i,j)=0;
-            treeLabel1(i,j)=0;
-        end
-    end
-end
-
-newA1 = A1;
-newA1(repmat(mask1, [1 1 3])) = 255;
-
-grayA2 = im2gray(A2);
-
-[I, J] = ndgrid(1:m2, 1:n2);
-
-mask2 = false(m2, n2);
-treeLabel2 = zeros(m2,n2);
-cultLabel2 = zeros(m2,n2);
-
-for i = 1:length(newX2)
-    % distanza euclidea
-    distanza = sqrt((I - newY2(i)).^2 + (J - newX2(i)).^2);
-    cultLabel2(distanza <= raggio) = oliveTreesTable{i+height(polignanoTable),"cult"};
-    treeLabel2(distanza <= raggio) = treeNum;
-    treeNum = treeNum + 1;
-    mask2 = mask2 | (distanza <= raggio);
-end
-
-mask2 = ~mask2;
-
-for i=1:m2
-    for j=1:n2
-        if grayA2(i,j) == 0
-            mask2(i,j) = 1;
-            cultLabel2(i,j)=0;
-            treeLabel2(i,j)=0;
-        end
-    end
-end
-newA2 = A2;
-newA2(repmat(mask2, [1 1 3])) = 255;
-
-figure
-subplot(1,2,1)
-imshow(newA1)
-title('Polignano')
-subplot(1,2,2)
-imshow(newA2)
-title('Monopoli')
+[newA2, mask2, treeLabel2, cultLabel2, treeNum] = refineSegmentation(A2,oliveTreesTable, newX2, newY2, radius, treeNum);
 
 
-
-[row1, col1] = find(cultLabel1 == 1);
-[row2, col2] = find(cultLabel1 == 2);
-[row3, col3] = find(cultLabel1 == 3);
-[row4, col4] = find(cultLabel1 == 4);
-[row5, col5] = find(cultLabel1 == 5);
-[row6, col6] = find(cultLabel1 == 6);
-[row7, col7] = find(cultLabel1 == 7);
-[row8, col8] = find(cultLabel1 == 8);
-[row9, col9] = find(cultLabel1 == 9);
-[row10, col10] = find(cultLabel1 == 10);
-[row11, col11] = find(cultLabel1 == 11);
-figure
-subplot(1,2,1)
-imshow(rgbImg1)
-hold on
-c1 = plot(col1, row1, '.', 'MarkerSize', 7,'Color', '#D95319','DisplayName','Altro');
-c2 = plot(col2, row2, '.', 'MarkerSize', 7,'Color', '#008000','DisplayName','Leccino');
-c3 = plot(col3, row3, '.', 'MarkerSize', 7,'Color', '#0072BD','DisplayName','Nociara');
-c4 = plot(col4, row4, '.', 'MarkerSize', 7,'Color', '#0000FF','DisplayName','Ogliarola barese');
-c5 = plot(col5, row5, '.', 'MarkerSize', 7, 'Color', '#800080','DisplayName','Oliastro');
-c6 = plot(col6, row6, '.', 'MarkerSize', 7,'Color', '#EDB120','DisplayName','Coratina');
-c7 = plot(col7, row7, '.', 'MarkerSize', 7,'Color', '#7E2F8E','DisplayName','Cornale');
-c8 = plot(col8, row8, '.', 'MarkerSize', 7,'Color', '#77AC30','DisplayName','Frantoio');
-c9 = plot(col9, row9, '.', 'MarkerSize', 7,'Color', '#4DBEEE','DisplayName','Mele');
-c10 = plot(col10, row10, '.', 'MarkerSize', 7,'Color', '#A2142F','DisplayName','Ogliarola salentina');
-c11 = plot(col11, row11, '.', 'MarkerSize', 7,'Color', '#FF0000','DisplayName','Oliva rossa');
-title("Polignano")
-hold off
-legend([c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11])
-clear c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11
-
-[row1, col1] = find(cultLabel2 == 1);
-[row2, col2] = find(cultLabel2 == 2);
-[row3, col3] = find(cultLabel2 == 3);
-[row4, col4] = find(cultLabel2 == 4);
-[row5, col5] = find(cultLabel2 == 5);
-[row6, col6] = find(cultLabel2 == 6);
-[row7, col7] = find(cultLabel2 == 7);
-[row8, col8] = find(cultLabel2 == 8);
-[row9, col9] = find(cultLabel2 == 9);
-[row10, col10] = find(cultLabel2 == 10);
-[row11, col11] = find(cultLabel2 == 11);
-subplot(1,2,2)
-imshow(rgbImg2)
-hold on
-c1 = plot(col1, row1, '.', 'MarkerSize', 7,'Color', '#D95319','DisplayName','Altro');
-c2 = plot(col2, row2, '.', 'MarkerSize', 7,'Color', '#008000','DisplayName','Leccino');
-c3 = plot(col3, row3, '.', 'MarkerSize', 7,'Color', '#0072BD','DisplayName','Nociara');
-c4 = plot(col4, row4, '.', 'MarkerSize', 7,'Color', '#0000FF','DisplayName','Ogliarola barese');
-c5 = plot(col5, row5, '.', 'MarkerSize', 7, 'Color', '#800080','DisplayName','Oliastro');
-c6 = plot(col6, row6, '.', 'MarkerSize', 7,'Color', '#EDB120','DisplayName','Coratina');
-c7 = plot(col7, row7, '.', 'MarkerSize', 7,'Color', '#7E2F8E','DisplayName','Cornale');
-c8 = plot(col8, row8, '.', 'MarkerSize', 7,'Color', '#77AC30','DisplayName','Frantoio');
-c9 = plot(col9, row9, '.', 'MarkerSize', 7,'Color', '#4DBEEE','DisplayName','Mele');
-c10 = plot(col10, row10, '.', 'MarkerSize', 7,'Color', '#A2142F','DisplayName','Ogliarola salentina');
-c11 = plot(col11, row11, '.', 'MarkerSize', 7,'Color', '#FF0000','DisplayName','Oliva rossa');
-title("Monopoli")
-hold off
-legend([c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11])
-clear c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 col1 col2 col3 col4 col5 col6 col7 col8 col9 col10 col11
-clear row1 row2 row3 row4 row5 row6 row7 row8 row9 row10 row11
+displayLabeledOliveTree(rgbImg1,rgbImg2,cultLabel1,cultLabel2)
 %% Maschera HSV per eliminare il terreno dall'immagine segmentata 
 newRgbImg1 = rgbImg1;
 newRgbImg1(repmat(mask1, [1 1 3])) = 255;

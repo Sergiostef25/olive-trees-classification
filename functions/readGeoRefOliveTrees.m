@@ -1,6 +1,7 @@
 function [A1, R1, A2, R2, x1, y1, x2, y2] = readGeoRefOliveTrees(cultTable, polignanoTiffFile,polignanoTiffSegFile,polignanoBands,monopoliTiffFile,monopoliTiffSegFile,monopoliBands, showImgages)
-%READGEOREFOLIVETREES Summary of this function goes here
-%   Detailed explanation goes here
+%READGEOREFOLIVETREES Lettura immagini satellitare e segmentate
+%   Le immagini satellitari e segmentate vengono sovrapposte per una
+%   preliminare rimozione del terreno
 arguments
     cultTable (:,4) table
     polignanoTiffFile (1, :) string
