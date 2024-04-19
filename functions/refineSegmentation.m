@@ -1,13 +1,14 @@
 function [newA, mask, treeLabel, cultLabel, treeNum] = refineSegmentation(A,cultTable,x,y,radius, treeNum)
-%REFINESEGMENTATION Summary of this function goes here
-%   Detailed explanation goes here
+%REFINESEGMENTATION Migliora la segmnetazioni dell'immagini, creando dei
+%cerchi intorno ai centroidi degli alberi e ridefinendo il contorno per
+%seguire esattamente la chioma degli ulivi
 arguments
     A (:,:,3) uint8
     cultTable (:,4) table
     x (:,1) double
     y (:,1) double
     radius int8
-    treeNum int8
+    treeNum int16
 end
 
 grayA = im2gray(A);

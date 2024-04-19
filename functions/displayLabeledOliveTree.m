@@ -1,6 +1,7 @@
 function displayLabeledOliveTree(img1,img2,label1, label2)
-%DISPLAYLABELEDOLIVETREE Summary of this function goes here
-%   Detailed explanation goes here
+%DISPLAYLABELEDOLIVETREE Mostre le due immagini satellitare con gli ulivi
+%labellizati
+
 [row1, col1] = find(label1 == 1);
 [row2, col2] = find(label1 == 2);
 [row3, col3] = find(label1 == 3);

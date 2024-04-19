@@ -52,195 +52,54 @@ treeNum = 1;
 
 displayLabeledOliveTree(rgbImg1,rgbImg2,cultLabel1,cultLabel2)
 %% Maschera HSV per eliminare il terreno dall'immagine segmentata 
-newRgbImg1 = rgbImg1;
-newRgbImg1(repmat(mask1, [1 1 3])) = 255;
-hsvImg = rgb2hsv(newRgbImg1);
-% tonalità
-hue = hsvImg(:,:,1);
-% per visualizzare al meglio l'istogramma delle tonalità
-% i pixel di valore 0 (nero) non vengono visualizzati
 
-X = hue(hue ~= 0);
-% figure
-% imhist(X)
+terrainMask1 = applyTerrainMask(rgbImg1, mask1, 'Polignano');
 
-% Soglie impostata vedendo l'istogramma
-terrainMask1 =  hsvImg(:,:,1) <= 0.18 | hsvImg(:,:,1) >= 0.45;
-newRgbImgNoOut1 = newRgbImg1;
-newRgbImgNoOut1(repmat(terrainMask1, [1 1 3])) = 255;
-
-
-figure
-subplot(2,3,1)
-imshow(newRgbImg1)
-title('Polignano with terrain')
-subplot(2,3,2)
-imshow(newRgbImgNoOut1)
-title('Polignano without terrain')
-subplot(2,3,3)
-imshowpair(newRgbImg1,newRgbImgNoOut1)
-title('Polignano differences')
-
-newRgbImg2 = rgbImg2;
-newRgbImg2(repmat(mask2, [1 1 3])) = 255;
-hsvImg = rgb2hsv(newRgbImg2);
-% tonalità
-hue = hsvImg(:,:,1);
-% per visualizzare al meglio l'istogramma delle tonalità
-% i pixel di valore 0 (nero) non vengono visualizzati
-
-X = hue(hue ~= 0);
-% figure
-% imhist(X)
-
-% Soglie impostata vedendo l'istogramma
-terrainMask2 =  hsvImg(:,:,1) <= 0.18 | hsvImg(:,:,1) >= 0.45;
-newRgbImgNoOut2 = newRgbImg2;
-newRgbImgNoOut2(repmat(terrainMask2, [1 1 3])) = 255;
-
-
-subplot(2,3,4)
-imshow(newRgbImg2)
-title('Monopoli with terrain')
-subplot(2,3,5)
-imshow(newRgbImgNoOut2)
-title('Monopoli without terrain')
-subplot(2,3,6)
-imshowpair(newRgbImg2,newRgbImgNoOut2)
-title('Monopoli differences')
-
-
+% i pixel che prima facevano erroneamente parte di un ulivo ora saranno
+% etichettati come terreno
 cultLabel1(terrainMask1) = 0;
 treeLabel1(terrainMask1) = 0;
 
+% la maschera della segmentazione viene unita a quella del terreno
 mask1 = mask1 | terrainMask1;
 newA1(repmat(mask1, [1 1 3])) = 255;
 
+terrainMask2 = applyTerrainMask(rgbImg2, mask2, 'Monopoli');
 
 cultLabel2(terrainMask2) = 0;
 treeLabel2(terrainMask2) = 0;
 
 mask2 = mask2 | terrainMask2;
 newA2(repmat(mask2, [1 1 3])) = 255;
-
 %% CalcoloVI
-ndviImg1 = computeVIs(crop1, 'ndvi');
-evi2Img1 = computeVIs(crop1 , 'evi2');
-cireImg1 = computeVIs(crop1, 'cire');
-gndviImg1 = computeVIs(crop1, 'gndvi');
-grviImg1 = computeVIs(crop1, 'grvi');
-psriImg1 = computeVIs(crop1, 'psri');
-renImg1 = computeVIs(crop1, 'ren');
-saviImg1 = computeVIs(crop1, 'savi');
-
-ndviImg2 = computeVIs(crop2, 'ndvi');
-evi2Img2 = computeVIs(crop2, 'evi2');
-cireImg2 = computeVIs(crop2, 'cire');
-gndviImg2 = computeVIs(crop2, 'gndvi');
-grviImg2 = computeVIs(crop2, 'grvi');
-psriImg2 = computeVIs(crop2, 'psri');
-renImg2 = computeVIs(crop2, 'ren');
-saviImg2 = computeVIs(crop2, 'savi');
-
-ndviImg1(mask1)=0;
-evi2Img1(mask1)=0;
-cireImg1(mask1)=0;
-gndviImg1(mask1)=0;
-grviImg1(mask1)=0;
-psriImg1(mask1)=0;
-renImg1(mask1)=0;
-saviImg1(mask1)=0;
-
-ndviImg2(mask2)=0;
-evi2Img2(mask2)=0;
-cireImg2(mask2)=0;
-gndviImg2(mask2)=0;
-grviImg2(mask2)=0;
-psriImg2(mask2)=0;
-renImg2(mask2)=0;
-saviImg2(mask2)=0;
+[ndviImg1,evi2Img1,cireImg1,gndviImg1,grviImg1,psriImg1,renImg1,saviImg1] = computeVisAndApplyMask(crop1, mask1);
+[ndviImg2,evi2Img2,cireImg2,gndviImg2,grviImg2,psriImg2,renImg2,saviImg2] = computeVisAndApplyMask(crop2, mask2);
 %% Merge immagine
-additionNewA1 = zeros(m2-m1,n1,3);
-additionNewA1(:) = 255;
-mergedRgbImg = cat(2, [newA1; additionNewA1], newA2);
-figure
-imshow(mergedRgbImg)
-title('Polignano and Monopoli merged')
 
-mergedCultLabel = cat(2, [cultLabel1; zeros(m2-m1,n1)], cultLabel2);
-mergedTreeLabel = cat(2, [treeLabel1; zeros(m2-m1,n1)], treeLabel2);
+[rgbImg, cultLabel, treeLabel] = mergeOliveTreesImages(newA1,newA2,m1,m2,n1, cultLabel1, cultLabel2, treeLabel1, treeLabel2);
 
 
-ndviImg = cat(2, [ndviImg1; zeros(m2-m1,n1)], ndviImg2);
-clear ndviImg1 ndviImg2
-evi2Img = cat(2, [evi2Img1; zeros(m2-m1,n1)], evi2Img2);
-clear evi2Img1 evi2Img2
-cireImg = cat(2, [cireImg1; zeros(m2-m1,n1)], cireImg2);
-clear cireImg1 cireImg2
-gndviImg = cat(2, [gndviImg1; zeros(m2-m1,n1)], gndviImg2);
-clear gndviImg1 gndviImg2
-grviImg = cat(2, [grviImg1; zeros(m2-m1,n1)], grviImg2);
-clear grviImg1 grviImg2
-psriImg = cat(2, [psriImg1; zeros(m2-m1,n1)], psriImg2);
-clear psriImg1 psriImg2
-renImg = cat(2, [renImg1; zeros(m2-m1,n1)], renImg2);
-clear renImg1 renImg2
-saviImg = cat(2, [saviImg1; zeros(m2-m1,n1)], saviImg2);
-clear saviImg1 saviImg2;
+[ndviImg,evi2Img,cireImg,gndviImg,grviImg,psriImg,renImg,saviImg] = mergeOliveTreesVIs(m2,m1,n1,ndviImg1,evi2Img1,cireImg1, ...
+    gndviImg1,grviImg1,psriImg1,renImg1,saviImg1, ...
+    ndviImg2,evi2Img2,cireImg2,gndviImg2,grviImg2,psriImg2,renImg2,saviImg2);
 
-%% Visualizza VI
-figure
-imagesc(ndviImg);
-colorbar
-title('NDVI')
+clear cultLabel1 cultLabel2 treeLabel1 treeLabel2
+clear ndviImg1 ndviImg2 evi2Img1 evi2Img2 cireImg1 cireImg2 gndviImg1 gndviImg2 grviImg1 grviImg2 psriImg1 psriImg2 renImg1 renImg2 saviImg1 saviImg2;
 
-figure
-imagesc(evi2Img);
-colorbar
-title('EVI2')
+%displayVIs(ndviImg,evi2Img,cireImg,gndviImg,grviImg,psriImg,renImg,saviImg);
 
-figure
-imagesc(cireImg);
-colorbar
-title('CIRE')
-
-figure
-imagesc(gndviImg);
-colorbar
-title('GNDVI')
-
-figure
-imagesc(grviImg);
-colorbar
-title('GRVI')
-
-figure
-imagesc(psriImg, [0, 1]);
-colorbar
-title('PSRI')
-
-figure
-imagesc(renImg);
-colorbar
-title('REN')
-
-figure
-imagesc(saviImg);
-colorbar
-title('SAVI')
 %% Creazione Dataset
-notTerrIdx = find(mergedCultLabel);
-[rowDataset, colDataset] = ind2sub(size(mergedCultLabel),notTerrIdx);
+notTerrainIdx = find(cultLabel);
+[rowDataset, colDataset] = ind2sub(size(cultLabel),notTerrainIdx);
 
 green = cat(2, [crop1.DataCube(:,:,22); zeros(m2-m1,n1)], crop2.DataCube(:,:,22));
 red = cat(2, [crop1.DataCube(:,:,26); zeros(m2-m1,n1)], crop2.DataCube(:,:,26));
 redEdge = cat(2, [crop1.DataCube(:,:,37); zeros(m2-m1,n1)], crop2.DataCube(:,:,37));
 nir = cat(2, [crop1.DataCube(:,:,46); zeros(m2-m1,n1)], crop2.DataCube(:,:,46));
 
-dataset = table(ndviImg(notTerrIdx),evi2Img(notTerrIdx),cireImg(notTerrIdx),gndviImg(notTerrIdx),grviImg(notTerrIdx),psriImg(notTerrIdx),renImg(notTerrIdx),saviImg(notTerrIdx), ...
-    green(notTerrIdx), red(notTerrIdx), redEdge(notTerrIdx), nir(notTerrIdx), rowDataset, colDataset, mergedTreeLabel(notTerrIdx),zeros(size(notTerrIdx)),...
+dataset = table(ndviImg(notTerrainIdx),evi2Img(notTerrainIdx),cireImg(notTerrainIdx),gndviImg(notTerrainIdx),grviImg(notTerrainIdx),psriImg(notTerrainIdx),renImg(notTerrainIdx),saviImg(notTerrainIdx), ...
+    green(notTerrainIdx), red(notTerrainIdx), redEdge(notTerrainIdx), nir(notTerrainIdx), rowDataset, colDataset, treeLabel(notTerrainIdx),zeros(size(notTerrainIdx)),...
     'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','row','col','treenum','place'});
 %% Creazione Training e Test set
-% length(find(mergedCultLabel == 11))
-aa = cultName;
+
 
