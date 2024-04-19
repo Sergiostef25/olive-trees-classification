@@ -1,25 +1,13 @@
-%% Letttura coordinate
-t1 = readtable('new_data/ulivi_in_CROP1_RGB.xlsx');
-t1.Ris = [];
-t1.Cult=categorical(t1.Cult);
+%% Lettura coordinate
+oliveTreesTable = createOliveTreesTable(readtable('new_data/ulivi_in_CROP1_RGB.xlsx'), readtable('new_data/ulivi_in_CROP2_RGB.xlsx'));
 
+% encoding delle tipologie di ultivo (da stringa a numero)
+[cultEncoded, cultNameAndCount] = grp2idx(oliveTreesTable.cult);
+oliveTreesTable.cult = cultEncoded;
 
-t1 = table(t1.expolat, t1.expolon, t1.Cult, zeros(height(t1),1));
-t1.Properties.VariableNames = ["expolat","expolon","cult","location"];
+[oliveTreesTable, cultNameAndCount] = removeLowCountTrees(oliveTreesTable, cultNameAndCount);
 
-t2 = readtable('new_data/ulivi_in_CROP2_RGB.xlsx');
-t2.Ris = [];
-t2.Cult = categorical(t2.Cult);
-missingCultIndex = find(ismissing(t2.Cult));
-t2(missingCultIndex,:)=[];
-
-
-t2 = table(t2.expolat, t2.expolon, t2.Cult, ones(height(t2),1));
-t2.Properties.VariableNames = ["expolat","expolon","cult","location"];
-
-newT = [t1;t2];
-[cultEncoded, cultName, cultLevel] = grp2idx(newT.cult);
-newT.cult = cultEncoded;
+clear cultEncoded
 %% Hypercubes
 waves=[386,400.3,405.1,409.9,414.6,419.4,424.1,430.1,436,440.8,445.6,450.3,455.1,482.4,509.7,514.5,519.2,525.2,531.1,535.8,543,550.1,559.6,569.1,620,671,675.7,680.5,685.2,690,694.7,699.4,705.4,711.3,716,720.8,725.5,730.2,735,739.7,744.5,749.2,755.1,761,781.2,801.3,930.5]';
 
@@ -33,10 +21,11 @@ seg_crop1 = ~logical(imread("new_data/Seg_CROP1.tif"));
 seg_crop2 = ~logical(imread("new_data/Seg_CROP2.tif"));
 
 %% Georaster
+
 [A1,R1] = readgeoraster('new_data/CROP1_47.tif','Bands',bands1);
 [m1, n1, ~] = size(A1);
 proj1 = R1.ProjectedCRS;
-[x1,y1] = projfwd(proj1,t1.expolat,t1.expolon);
+[x1,y1] = projfwd(proj1,polignanoTable.expolat,polignanoTable.expolon);
 A1=uint8(A1*500);
 A1(repmat(seg_crop1, [1 1 3])) = 0;
     
@@ -52,7 +41,7 @@ hold off
 [A2,R2] = readgeoraster('new_data/CROP2_47.tif','Bands',bands2);
 [m2, n2, ~] = size(A2);
 proj2 = R2.ProjectedCRS;
-[x2,y2] = projfwd(proj2,t2.expolat,t2.expolon);
+[x2,y2] = projfwd(proj2,monopoliTable.expolat,monopoliTable.expolon);
 A2=uint8(A2*500);
 A2(repmat(seg_crop2, [1 1 3])) = 0;
 subplot(1,2,2)
@@ -88,7 +77,7 @@ treeNum = 1;
 for i = 1:length(newX1)
     % distanza euclidea
     distanza = sqrt((I - newY1(i)).^2 + (J - newX1(i)).^2);
-    cultLabel1(distanza <= raggio) = newT{i,"cult"};
+    cultLabel1(distanza <= raggio) = oliveTreesTable{i,"cult"};
     treeLabel1(distanza <= raggio) = treeNum;
     treeNum = treeNum + 1;
     mask1 = mask1 | (distanza <= raggio);
@@ -96,15 +85,20 @@ end
 
 mask1 = ~mask1;
 
+% qui con l'ausilio dell'mmagine in scala di grigi
+% trasformiamo i 'cerchi' che individuano gli alberi
+% dello step precedente, nella forma delle loro chiome
+
 for i=1:m1
     for j=1:n1
         if grayA1(i,j) == 0
-            mask1(i,j) = 1; % segna la presenza di un albero
-            cultLabel1(i,j)=0; % senza questo cult e tre sarebbere ancora dei cerchi e non seguirebbero il contorno degli alberi
+            mask1(i,j) = 1;
+            cultLabel1(i,j)=0;
             treeLabel1(i,j)=0;
         end
     end
 end
+
 newA1 = A1;
 newA1(repmat(mask1, [1 1 3])) = 255;
 
@@ -119,7 +113,7 @@ cultLabel2 = zeros(m2,n2);
 for i = 1:length(newX2)
     % distanza euclidea
     distanza = sqrt((I - newY2(i)).^2 + (J - newX2(i)).^2);
-    cultLabel2(distanza <= raggio) = newT{i+height(t1),"cult"};
+    cultLabel2(distanza <= raggio) = oliveTreesTable{i+height(polignanoTable),"cult"};
     treeLabel2(distanza <= raggio) = treeNum;
     treeNum = treeNum + 1;
     mask2 = mask2 | (distanza <= raggio);
@@ -400,3 +394,6 @@ dataset = table(ndviImg(notTerrIdx),evi2Img(notTerrIdx),cireImg(notTerrIdx),gndv
     green(notTerrIdx), red(notTerrIdx), redEdge(notTerrIdx), nir(notTerrIdx), rowDataset, colDataset, mergedTreeLabel(notTerrIdx),zeros(size(notTerrIdx)),...
     'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','row','col','treenum','place'});
 %% Creazione Training e Test set
+% length(find(mergedCultLabel == 11))
+aa = cultName;
+
