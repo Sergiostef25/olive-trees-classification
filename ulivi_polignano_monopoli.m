@@ -98,17 +98,12 @@ redEdge = cat(2, [crop1.DataCube(:,:,37); zeros(m2-m1,n1)], crop2.DataCube(:,:,3
 nir = cat(2, [crop1.DataCube(:,:,46); zeros(m2-m1,n1)], crop2.DataCube(:,:,46));
 
 dataset = table(ndviImg(notTerrainIdx),evi2Img(notTerrainIdx),cireImg(notTerrainIdx),gndviImg(notTerrainIdx),grviImg(notTerrainIdx),psriImg(notTerrainIdx),renImg(notTerrainIdx),saviImg(notTerrainIdx), ...
-    green(notTerrainIdx), red(notTerrainIdx), redEdge(notTerrainIdx), nir(notTerrainIdx), treeLabel(notTerrainIdx),notTerrainIdx,labels,...
-    'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','treenum','index','labels'});
-%% Creazione Training e Test set
+    green(notTerrainIdx), red(notTerrainIdx), redEdge(notTerrainIdx), nir(notTerrainIdx), labels, treeLabel(notTerrainIdx),notTerrainIdx,...
+    'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','labels','treenum','index'});
+
+%% Creazione Training, Test set e normalizzazione
 [XTrainSet, XTestSet] = createAndDisplayTrainTestSet(dataset, 0.7, rgbImg);
+[XTrainSet,XTestSet] = normalizeTrainTestSet(XTrainSet,XTestSet);
 
-%% Normalizzazione del dataset
-XTrainSetMean = mean(XTrainSet{:,1:12});
-XTrainSetStd = std(XTrainSet{:,1:12});
-
-% Normalizzazione Z-score per il set di addestramento
-XTrainSet{:,1:12} = (XTrainSet{:,1:12} - XTrainSetMean) ./ XTrainSetStd;
-
-% Applica la stessa normalizzazione al set di test
-XTestSet{:,1:12} = (XTestSet{:,1:12} - XTrainSetMean) ./ XTrainSetStd;
+%% Correlazione
+[XTrainSetNew,XTestSetNew] = correlationFeatureSelection(XTrainSet,XTrainSet);
