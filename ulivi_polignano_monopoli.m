@@ -1,11 +1,12 @@
 %% Lettura coordinate
 oliveTreesTable = createOliveTreesTable(readtable('new_data/ulivi_in_CROP1_RGB.xlsx'), readtable('new_data/ulivi_in_CROP2_RGB.xlsx'));
+oliveTreesTable(oliveTreesTable.cult == "Altro", :) = [];
 
 % encoding delle tipologie di ultivo (da stringa a numero)
 [cultEncoded, cultNameAndCount] = grp2idx(oliveTreesTable.cult);
 oliveTreesTable.cult = cultEncoded;
 
-[oliveTreesTable, cultNameAndCount] = removeLowCountTrees(oliveTreesTable, cultNameAndCount);
+[oliveTreesTable, cultNameAndCount] = removeLowCountTrees(oliveTreesTable, cultNameAndCount, 10);
 
 % rifaccio l'encoding dopo la rimozione di alcune categorie
 cultEncoded = grp2idx(oliveTreesTable.cult);
@@ -107,3 +108,27 @@ dataset = table(ndviImg(notTerrainIdx),evi2Img(notTerrainIdx),cireImg(notTerrain
 
 %% Correlazione
 [XTrainSetNew,XTestSetNew] = correlationFeatureSelection(XTrainSet,XTrainSet);
+
+%% Training e Testing KNN
+mdl = fitcknn(XTrainSetNew(:,1:6),XTrainSetNew(:,"labels"),'NumNeighbors',5,'Standardize',1);
+cvmdl = crossval(mdl); %10-fold
+
+[Ypredicted,score,cost] = predict(cvmdl.Trained{1},XTestSetNew(:,1:6));
+
+C = confusionmat(XTestSetNew{:,"labels"},Ypredicted);
+figure
+cm = confusionchart(C,cultNameAndCount(:,1));
+%% AUC curve
+AUC = zeros(6);
+legends = cell(6,1);
+figure
+hold on
+for i=1:6
+    [X,Y,T,AUC(i)] = perfcurve(XTestSetNew{:,"labels"},score(:,1),i);
+    plot(X,Y)
+    legends{i} = sprintf('AUC for %s class: %.3f', cultNameAndCount{i,1}, AUC(i));
+end
+legend(legends, 'location', 'southeast')
+    xlabel('False positive rate'); ylabel('True positive rate');
+    title('ROC for Classification by KNN')
+hold off
