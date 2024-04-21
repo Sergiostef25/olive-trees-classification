@@ -108,22 +108,28 @@ dataset = table(ndviImg(notTerrainIdx),evi2Img(notTerrainIdx),cireImg(notTerrain
 
 %% Correlazione
 [XTrainSetNew,XTestSetNew] = correlationFeatureSelection(XTrainSet,XTrainSet);
-
+numberOfFeatures = size(XTrainSetNew,2)-1
 %% Training e Testing KNN
-mdl = fitcknn(XTrainSetNew(:,1:6),XTrainSetNew(:,"labels"),'NumNeighbors',5,'Standardize',1);
+rng(1)
+% mdl = fitcknn(XTrainSetNew(:,1:numberOfFeatures),XTrainSetNew(:,"labels"),'NumNeighbors',5,'Standardize',1);
+mdl = fitcknn(XTrainSetNew(:,1:numberOfFeatures),XTrainSetNew(:,"labels"),'OptimizeHyperparameters','auto',...
+    'HyperparameterOptimizationOptions',...
+    struct('AcquisitionFunctionName','expected-improvement-plus'));
+%%
 cvmdl = crossval(mdl); %10-fold
+cvtrainError = kfoldLoss(cvmdl)
 
-[Ypredicted,score,cost] = predict(cvmdl.Trained{1},XTestSetNew(:,1:6));
+[Ypredicted,score,cost] = predict(cvmdl.Trained{1},XTestSetNew(:,1:numberOfFeatures));
 
 C = confusionmat(XTestSetNew{:,"labels"},Ypredicted);
 figure
 cm = confusionchart(C,cultNameAndCount(:,1));
 %% AUC curve
-AUC = zeros(6);
-legends = cell(6,1);
+AUC = zeros(size(cultNameAndCount,1));
+legends = cell(size(cultNameAndCount,1),1);
 figure
 hold on
-for i=1:6
+for i=1:size(cultNameAndCount,1)
     [X,Y,T,AUC(i)] = perfcurve(XTestSetNew{:,"labels"},score(:,1),i);
     plot(X,Y)
     legends{i} = sprintf('AUC for %s class: %.3f', cultNameAndCount{i,1}, AUC(i));
@@ -132,3 +138,4 @@ legend(legends, 'location', 'southeast')
     xlabel('False positive rate'); ylabel('True positive rate');
     title('ROC for Classification by KNN')
 hold off
+%%

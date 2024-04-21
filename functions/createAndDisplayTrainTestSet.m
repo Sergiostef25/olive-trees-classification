@@ -6,29 +6,82 @@ arguments
     rgbImg
 end
 
-index1Train = dataset.labels == 1;
-index1Train(1:round(numel(index1Train)*percentage)) = 0;
+% subDataset = dataset(dataset.labels == 1,:);
+% 
+% n = height(subDataset);
+% hpartition = cvpartition(n,'Holdout',0.3);
+% idxTrain = training(hpartition);
+% train1 = subDataset(idxTrain,:);
+% idxNew = test(hpartition);
+% test1 = subDataset(idxNew,:);
+% 
+% subDataset = dataset(dataset.labels == 2,:);
+% 
+% n = height(subDataset);
+% hpartition = cvpartition(n,'Holdout',0.3);
+% idxTrain = training(hpartition);
+% train2 = subDataset(idxTrain,:);
+% idxNew = test(hpartition);
+% test2 = subDataset(idxNew,:);
+% 
+% subDataset = dataset(dataset.labels == 3,:);
+% 
+% n = height(subDataset);
+% hpartition = cvpartition(n,'Holdout',0.3);
+% idxTrain = training(hpartition);
+% train3 = subDataset(idxTrain,:);
+% idxNew = test(hpartition);
+% test3 = subDataset(idxNew,:);
+% 
+% subDataset = dataset(dataset.labels == 4,:);
+% 
+% n = height(subDataset);
+% hpartition = cvpartition(n,'Holdout',0.3);
+% idxTrain = training(hpartition);
+% train4 = subDataset(idxTrain,:);
+% idxNew = test(hpartition);
+% test4 = subDataset(idxNew,:);
+% 
+% subDataset = dataset(dataset.labels == 5,:);
+% 
+% n = height(subDataset);
+% hpartition = cvpartition(n,'Holdout',0.3);
+% idxTrain = training(hpartition);
+% train5 = subDataset(idxTrain,:);
+% idxNew = test(hpartition);
+% test5 = subDataset(idxNew,:);
 
-index2Train = dataset.labels == 2;
-index2Train(1:round(numel(index2Train)*percentage)) = 0;
 
-index3Train = dataset.labels == 3;
-index3Train(1:round(numel(index3Train)*percentage));
+index1= find(dataset.labels == 1);
+index1Train = index1(1:round(numel(index1)*percentage));
+index1Test = index1(round(numel(index1)*percentage)+1:round(numel(index1)));
 
-index4Train = dataset.labels == 4;
-index4Train(1:round(numel(index4Train)*percentage));
+index2= find(dataset.labels == 2);
+index2Train = index2(1:round(numel(index2)*percentage));
+index2Test = index2(round(numel(index2)*percentage)+1:round(numel(index2)));
 
-index5Train = dataset.labels == 5;
-index5Train(1:round(numel(index5Train)*percentage));
+index3= find(dataset.labels == 3);
+index3Train = index3(1:round(numel(index3)*percentage));
+index3Test = index3(round(numel(index3)*percentage)+1:round(numel(index3)));
 
-index6Train = dataset.labels == 6;
-index6Train(1:round(numel(index6Train)*percentage));
+index4= find(dataset.labels == 4);
+index4Train = index4(1:round(numel(index4)*percentage));
+index4Test = index4(round(numel(index4)*percentage)+1:round(numel(index4)));
 
-indexTrain = index1Train | index2Train | index3Train | index4Train | index5Train | index6Train;
-indexTest = ~ indexTrain;
+index5= find(dataset.labels == 5);
+index5Train = index5(1:round(numel(index5)*percentage));
+index5Test = index5(round(numel(index5)*percentage)+1:round(numel(index5)));
+
+
+
+indexTrain = [index1Train ; index2Train ; index3Train ; index4Train ; index5Train];
+indexTest =  [index1Test ; index2Test ; index3Test ; index4Test ; index5Test];
 
 XTrainSet = dataset(indexTrain,:);
 XTestSet = dataset(indexTest, :);
+
+% XTrainSet = [train1 ; train2 ; train3 ; train4 ; train5];
+% XTestSet =  [test1 ; test2 ; test3 ; test4 ; test5];
 
 
 [a, b] = ind2sub(size(rgbImg,[1,2]),XTrainSet.index);
