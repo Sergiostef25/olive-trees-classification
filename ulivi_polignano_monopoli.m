@@ -1,11 +1,12 @@
 %% Lettura coordinate
 oliveTreesTable = createOliveTreesTable(readtable('new_data/ulivi_in_CROP1_RGB.xlsx'), readtable('new_data/ulivi_in_CROP2_RGB.xlsx'));
+oliveTreesTable(oliveTreesTable.cult == "Altro", :) = [];
 
 % encoding delle tipologie di ultivo (da stringa a numero)
 [cultEncoded, cultNameAndCount] = grp2idx(oliveTreesTable.cult);
 oliveTreesTable.cult = cultEncoded;
 
-[oliveTreesTable, cultNameAndCount] = removeLowCountTrees(oliveTreesTable, cultNameAndCount);
+[oliveTreesTable, cultNameAndCount] = removeLowCountTrees(oliveTreesTable, cultNameAndCount, 10);
 
 % rifaccio l'encoding dopo la rimozione di alcune categorie
 cultEncoded = grp2idx(oliveTreesTable.cult);
