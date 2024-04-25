@@ -1,4 +1,4 @@
-function [XTrainSet, XTestSet, indexTrain,indexTest] = createAndDisplayTrainTestSet(dataset, percentage, rgbImg)
+function [XTrainSet, XTestSet] = createAndDisplayTrainTestSet(dataset, percentage, rgbImg)
 %CREATEANDDISPLAYTRAINTESTSET holdout train test set
 arguments
     dataset table
@@ -77,7 +77,7 @@ index5Test = index5(round(numel(index5)*percentage)+1:round(numel(index5)));
 indexTrain = [index1Train ; index2Train ; index3Train ; index4Train ; index5Train];
 indexTest =  [index1Test ; index2Test ; index3Test ; index4Test ; index5Test];
 
-XTrainSet = dataset(indexTrain,:);
+XTrainSet = dataset(indexTrain, :);
 XTestSet = dataset(indexTest, :);
 
 % XTrainSet = [train1 ; train2 ; train3 ; train4 ; train5];

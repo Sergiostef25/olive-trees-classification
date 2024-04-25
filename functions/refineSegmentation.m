@@ -4,7 +4,7 @@ function [newA, mask, treeLabel, cultLabel, treeNum] = refineSegmentation(A,cult
 %seguire esattamente la chioma degli ulivi
 arguments
     A (:,:,3) uint8
-    cultTable (:,4) table
+    cultTable table
     x (:,1) double
     y (:,1) double
     radius int8

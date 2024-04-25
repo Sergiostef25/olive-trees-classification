@@ -1,17 +1,14 @@
 %% Lettura coordinate
 oliveTreesTable = createOliveTreesTable(readtable('new_data/ulivi_in_CROP1_RGB.xlsx'), readtable('new_data/ulivi_in_CROP2_RGB.xlsx'));
-oliveTreesTable(oliveTreesTable.cult == "Altro", :) = [];
 
+oliveTreesTable(oliveTreesTable.cult == "Altro", :) = [];
+%oliveTreesTable{oliveTreesTable.cult ~= "Altro" & oliveTreesTable.cult ~= "Ogliarola barese","cult"} = "Altro";
 % encoding delle tipologie di ultivo (da stringa a numero)
 [cultEncoded, cultNameAndCount] = grp2idx(oliveTreesTable.cult);
 oliveTreesTable.cult = cultEncoded;
 
-[oliveTreesTable, cultNameAndCount] = removeLowCountTrees(oliveTreesTable, cultNameAndCount, 10);
-
-% rifaccio l'encoding dopo la rimozione di alcune categorie
-cultEncoded = grp2idx(oliveTreesTable.cult);
-oliveTreesTable.cult = cultEncoded;
-
+[oliveTreesTable, cultNameAndCount] = removeLowCountTrees(oliveTreesTable, cultNameAndCount, 11);
+tabulate(categorical(oliveTreesTable.cult))
 clear cultEncoded
 %% Hypercubes
 % lettura hypercube utili per estrapolare le informazioni iperspettrali
@@ -101,35 +98,64 @@ nir = cat(2, [crop1.DataCube(:,:,46); zeros(m2-m1,n1)], crop2.DataCube(:,:,46));
 dataset = table(ndviImg(notTerrainIdx),evi2Img(notTerrainIdx),cireImg(notTerrainIdx),gndviImg(notTerrainIdx),grviImg(notTerrainIdx),psriImg(notTerrainIdx),renImg(notTerrainIdx),saviImg(notTerrainIdx), ...
     green(notTerrainIdx), red(notTerrainIdx), redEdge(notTerrainIdx), nir(notTerrainIdx), labels, treeLabel(notTerrainIdx),notTerrainIdx,...
     'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','labels','treenum','index'});
+%%
+[datasetWitoutOutliers, outIdx]= rmoutliers(dataset{:,1:12});
+datasetWitoutOutliers = [datasetWitoutOutliers, labels(~outIdx), treeLabel(~outIdx), notTerrainIdx(~outIdx)];
+newDataset = array2table(datasetWitoutOutliers,'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','labels','treenum','index'});
+newLabels = labels(~outIdx);
+figure
+histogram(dataset.ndvi,'DisplayName','Originale','FaceColor','blue');
+hold on
+histogram(newDataset.ndvi,'DisplayName','Con outlier rimossi','FaceColor','red');
+legend
+hold off
 
 %% Creazione Training, Test set e normalizzazione
-[XTrainSet, XTestSet] = createAndDisplayTrainTestSet(dataset, 0.7, rgbImg);
+[XTrainSet, XTestSet] = createAndDisplayTrainTestSet(newDataset, 0.7, rgbImg);
 [XTrainSet,XTestSet] = normalizeTrainTestSet(XTrainSet,XTestSet);
 
 %% Correlazione
-[XTrainSetNew,XTestSetNew] = correlationFeatureSelection(XTrainSet,XTrainSet,0.75);
-numberOfFeatures = size(XTrainSetNew,2)-1
+[XTrainSetNew,XTestSetNew] = correlationFeatureSelection(XTrainSet,XTestSet,0.85);
+YTrainSet = XTrainSetNew.labels;
+YTestSet = XTestSetNew.labels;
+XTrainSetNew = removevars(XTrainSetNew,"labels");
+XTestSetNew = removevars(XTestSetNew,"labels");
+numberOfFeatures = size(XTrainSetNew,2)
+
+scatter3(XTrainSetNew{:,1},XTrainSetNew{:,2},XTrainSetNew{:,3},10,YTrainSet,'filled')
+ax = gca;
+ax.XDir = 'reverse';
+view(-31,14)
+xlabel(XTestSetNew.Properties.VariableNames{1})
+ylabel(XTestSetNew.Properties.VariableNames{2})
+zlabel(XTestSetNew.Properties.VariableNames{3})
+
+cb = colorbar;                             
+cb.Label.String = 'Labels';
 %% Training e Testing KNN
 rng(1)
-% mdl = fitcknn(XTrainSetNew(:,1:numberOfFeatures),XTrainSetNew(:,"labels"),'NumNeighbors',5,'Standardize',1);
-% mdl = fitcknn(XTrainSetNew(:,1:numberOfFeatures),XTrainSetNew(:,"labels"),'OptimizeHyperparameters','auto',...
+t1 = datetime;
+mdl = fitcknn(XTrainSetNew,YTrainSet,'NumNeighbors',40,'Standardize',1);
+% mdl = fitcknnXTrainSetNew,YTrainSet,'OptimizeHyperparameters','auto',...
 %     'HyperparameterOptimizationOptions',...
 %     struct('AcquisitionFunctionName','expected-improvement-plus'));
-t = templateKNN;
-t1 = datetime;
-mdl = fitcecoc(XTrainSetNew(:,1:numberOfFeatures),XTrainSetNew(:,"labels"),'Learners',t,'ObservationsIn','rows','OptimizeHyperparameters','auto',...
-    'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
-    'expected-improvement-plus'))
+% t = templateKNN;
+% mdl = fitcecoc(XTrainSetNew,YTrainSet,'Learners',t,'ObservationsIn','rows','OptimizeHyperparameters','auto',...
+%     'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
+%     'expected-improvement-plus'))
+
+
 cvmdl = crossval(mdl); %10-fold
 
 t2 = datetime;
 fprintf('Durata training knn -> %s\n',between(t1,t2))
 genError = kfoldLoss(cvmdl)
+trainAcc = 1 -genError
 %%
 
-[Ypredicted,score,cost] = predict(cvmdl.Trained{1},XTestSetNew(:,1:numberOfFeatures));
+[Ypredicted,score,cost] = predict(cvmdl.Trained{1},XTestSetNew);
 
-C = confusionmat(XTestSetNew{:,"labels"},Ypredicted);
+C = confusionmat(YTestSet,Ypredicted);
 figure
 cm = confusionchart(C,cultNameAndCount(:,1));
 %% AUC curve
@@ -138,7 +164,7 @@ legends = cell(size(cultNameAndCount,1),1);
 figure
 hold on
 for i=1:size(cultNameAndCount,1)
-    [X,Y,T,AUC(i)] = perfcurve(XTestSetNew{:,"labels"},score(:,1),i);
+    [X,Y,T,AUC(i)] = perfcurve(YTestSet,score(:,1),i);
     plot(X,Y)
     legends{i} = sprintf('AUC for %s class: %.3f', cultNameAndCount{i,1}, AUC(i));
 end
@@ -146,4 +172,36 @@ legend(legends, 'location', 'southeast')
     xlabel('False positive rate'); ylabel('True positive rate');
     title('ROC for Classification by KNN')
 hold off
+%% Training SVM
+rng(1)
+t1 = datetime;
+% mdl = fitcsvm(XTrainSetNew,YTrainSet);
+t = templateSVM;
+mdl = fitcecoc(XTrainSetNew,YTrainSet,'Learners',t,'ObservationsIn','rows')
+cvmdl = crossval(mdl); %10-fold
+
+t2 = datetime;
+fprintf('Durata training svm -> %s\n',between(t1,t2))
+genError = kfoldLoss(cvmdl)
+trainAcc = 1 -genError
 %%
+
+[Ypredicted,score,cost] = predict(cvmdl.Trained{5},XTestSetNew);
+
+C = confusionmat(YTestSet,Ypredicted);
+figure
+cm = confusionchart(C,cultNameAndCount(:,1));
+%% AUC curve
+AUC = zeros(size(cultNameAndCount,1));
+legends = cell(size(cultNameAndCount,1),1);
+figure
+hold on
+for i=1:size(cultNameAndCount,1)
+    [X,Y,T,AUC(i)] = perfcurve(YTestSet,score(:,i),i);
+    plot(X,Y)
+    legends{i} = sprintf('AUC for %s class: %.3f', cultNameAndCount{i,1}, AUC(i));
+end
+legend(legends, 'location', 'southeast')
+    xlabel('False positive rate'); ylabel('True positive rate');
+    title('ROC for Classification by KNN')
+hold off

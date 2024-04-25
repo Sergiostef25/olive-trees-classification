@@ -2,7 +2,7 @@ function [cultTable, newCultCounts] = removeLowCountTrees(cultTable,cultCounts, 
 %REMOVELOWCOUNTTREES rimozione alberi che sono presenti soltanto una volta
 
 arguments
-    cultTable (:,4) table
+    cultTable table
     cultCounts (:,1) cell
     threshold
 end
@@ -31,6 +31,10 @@ for i=1:length(cultCounts)
     end
 
 end
+
+% rifaccio l'encoding dopo la rimozione di alcune categorie
+cultEncoded = grp2idx(cultTable.cult);
+cultTable.cult = cultEncoded;
 
 end
 
