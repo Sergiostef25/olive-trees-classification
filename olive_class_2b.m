@@ -295,9 +295,23 @@ XtrainSetNew = removevars(XtrainSet,labelNames(corrFeat));
 XtrainSetNew = removevars(XtrainSetNew, {'row','col','treenum'});
 XtestSetNew = removevars(XtestSet,labelNames(corrFeat));
 XtestSetNew = removevars(XtestSetNew, {'row','col','treenum'});
+%%
+scatter3(XtrainSetNew{:,1},XtrainSetNew{:,2},XtrainSetNew{:,3},10,trainSetWithLab.labels,'filled')
+ax = gca;
+ax.XDir = 'reverse';
+view(-31,14)
+xlabel(XtrainSetNew.Properties.VariableNames{1})
+ylabel(XtrainSetNew.Properties.VariableNames{2})
+zlabel(XtrainSetNew.Properties.VariableNames{3})
+
+cb = colorbar;                             
+cb.Label.String = 'Labels';
 
 %% Training KNN
-mdl = fitcknn(XtrainSetNew,YtrainSet,'NumNeighbors',5,'Standardize',1);
+% mdl = fitcknn(XtrainSetNew,YtrainSet,'NumNeighbors',5,'Standardize',1);
+mdl = fitcknn(XtrainSetNew,YtrainSet,'OptimizeHyperparameters','auto',...
+    'HyperparameterOptimizationOptions',...
+    struct('AcquisitionFunctionName','expected-improvement-plus'));
 cvmdl = crossval(mdl); %10-fold
 %% Testing KNN
 [Ypredicted,score,cost] = predict(cvmdl.Trained{2},XtestSetNew);

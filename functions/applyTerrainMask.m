@@ -10,8 +10,8 @@ hue = hsvImg(:,:,1);
 % i pixel di valore 0 (nero) non vengono visualizzati
 
 X = hue(hue ~= 0);
-% figure
-% imhist(X)
+figure
+imhist(X)
 
 % Soglie impostata vedendo l'istogramma
 terrainMask =  hsvImg(:,:,1) <= 0.18 | hsvImg(:,:,1) >= 0.45;
