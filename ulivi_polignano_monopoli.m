@@ -107,7 +107,7 @@ dataset = table(ndviImg(notTerrainIdx),evi2Img(notTerrainIdx),cireImg(notTerrain
 [XTrainSet,XTestSet] = normalizeTrainTestSet(XTrainSet,XTestSet);
 
 %% Correlazione
-[XTrainSetNew,XTestSetNew] = correlationFeatureSelection(XTrainSet,XTrainSet);
+[XTrainSetNew,XTestSetNew] = correlationFeatureSelection(XTrainSet,XTrainSet,0.75);
 numberOfFeatures = size(XTrainSetNew,2)-1
 %% Training e Testing KNN
 rng(1)
@@ -116,12 +116,16 @@ rng(1)
 %     'HyperparameterOptimizationOptions',...
 %     struct('AcquisitionFunctionName','expected-improvement-plus'));
 t = templateKNN;
+t1 = datetime;
 mdl = fitcecoc(XTrainSetNew(:,1:numberOfFeatures),XTrainSetNew(:,"labels"),'Learners',t,'ObservationsIn','rows','OptimizeHyperparameters','auto',...
     'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
     'expected-improvement-plus'))
-%%
 cvmdl = crossval(mdl); %10-fold
-cvtrainError = kfoldLoss(cvmdl)
+
+t2 = datetime;
+fprintf('Durata training knn -> %s\n',between(t1,t2))
+genError = kfoldLoss(cvmdl)
+%%
 
 [Ypredicted,score,cost] = predict(cvmdl.Trained{1},XTestSetNew(:,1:numberOfFeatures));
 

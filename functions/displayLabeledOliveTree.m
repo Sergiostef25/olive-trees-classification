@@ -16,7 +16,7 @@ c1 = plot(col1, row1, '.', 'MarkerSize', 7,'Color', '#008000','DisplayName','Lec
 c2 = plot(col2, row2, '.', 'MarkerSize', 7,'Color', '#0000FF','DisplayName','Ogliarola barese');
 c3 = plot(col3, row3, '.', 'MarkerSize', 7, 'Color', '#800080','DisplayName','Oliastro');
 c4 = plot(col4, row4, '.', 'MarkerSize', 7,'Color', '#EDB120','DisplayName','Coratina');
-c5 = plot(col5, row5, '.', 'MarkerSize', 7,'Color', '#0072BD','DisplayName','Ogliarola salentina');
+c5 = plot(col5, row5, '.', 'MarkerSize', 7,'Color', '#A2142F','DisplayName','Ogliarola salentina');
 
 
 
@@ -37,7 +37,7 @@ c1 = plot(col1, row1, '.', 'MarkerSize', 7,'Color', '#008000','DisplayName','Lec
 c2 = plot(col2, row2, '.', 'MarkerSize', 7,'Color', '#0000FF','DisplayName','Ogliarola barese');
 c3 = plot(col3, row3, '.', 'MarkerSize', 7, 'Color', '#800080','DisplayName','Oliastro');
 c4 = plot(col4, row4, '.', 'MarkerSize', 7,'Color', '#EDB120','DisplayName','Coratina');
-c5 = plot(col5, row5, '.', 'MarkerSize', 7,'Color', '#0072BD','DisplayName','Ogliarola salentina');
+c5 = plot(col5, row5, '.', 'MarkerSize', 7,'Color', '#A2142F','DisplayName','Ogliarola salentina');
 
 title("Monopoli")
 hold off

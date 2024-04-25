@@ -1,4 +1,4 @@
-function [newTrain,newTest] = correlationFeatureSelection(train,test)
+function [newTrain,newTest] = correlationFeatureSelection(train,test,threshold)
 %CORRELATIONFEATURESELECTION Feature selection che scarta le feature che
 %tra loro sono fortemente correlate
 coeff = corrcoef(train{:,1:13});
@@ -13,7 +13,7 @@ h.YDisplayLabels = labelNames;
 corrFeat = zeros(1,size(train(:,1:13),2));
 for i=2:size(train(:,1:13),2)
     for j=1:i-1
-        if abs(coeff(i,j))> 0.8
+        if abs(coeff(i,j))> threshold
             corrFeat(i) = 1;
         end
     end
