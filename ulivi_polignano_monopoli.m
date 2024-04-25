@@ -154,7 +154,8 @@ trainAcc = 1 -genError
 %%
 
 [Ypredicted,score,cost] = predict(cvmdl.Trained{1},XTestSetNew);
-
+testLoss = loss(cvmdl.Trained{1},XTestSetNew,YTestSet)
+testAccuracy = 1-testLoss
 C = confusionmat(YTestSet,Ypredicted);
 figure
 cm = confusionchart(C,cultNameAndCount(:,1));
@@ -164,7 +165,7 @@ legends = cell(size(cultNameAndCount,1),1);
 figure
 hold on
 for i=1:size(cultNameAndCount,1)
-    [X,Y,T,AUC(i)] = perfcurve(YTestSet,score(:,1),i);
+    [X,Y,T,AUC(i)] = perfcurve(YTestSet,score(:,i),i);
     plot(X,Y)
     legends{i} = sprintf('AUC for %s class: %.3f', cultNameAndCount{i,1}, AUC(i));
 end
@@ -186,8 +187,9 @@ genError = kfoldLoss(cvmdl)
 trainAcc = 1 -genError
 %%
 
-[Ypredicted,score,cost] = predict(cvmdl.Trained{5},XTestSetNew);
-
+[Ypredicted,score,cost] = predict(cvmdl.Trained{1},XTestSetNew);
+testLoss = loss(cvmdl.Trained{1},XTestSetNew,YTestSet)
+testAccuracy = 1-testLoss
 C = confusionmat(YTestSet,Ypredicted);
 figure
 cm = confusionchart(C,cultNameAndCount(:,1));
