@@ -22,7 +22,7 @@ c5 = plot(col5, row5, '.', 'MarkerSize', 7,'Color', '#A2142F','DisplayName','Ogl
 
 title("Polignano")
 hold off
-legend([c1,c2,c3,c4,c5])
+legend([c1,c2,c3,c4,c5],Location='northoutside')
 clear c1 c2 c3 c4 c5
 
 [row1, col1] = find(label2 == 1);
@@ -41,7 +41,7 @@ c5 = plot(col5, row5, '.', 'MarkerSize', 7,'Color', '#A2142F','DisplayName','Ogl
 
 title("Monopoli")
 hold off
-legend([c1,c2,c3,c4,c5])
+legend([c1,c2,c3,c4,c5],Location='northoutside')
 clear c1 c2 c3 c4 c5 col1 col2 col3 col4 col5 
 clear row1 row2 row3 row4 row5
 end

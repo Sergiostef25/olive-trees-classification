@@ -74,8 +74,8 @@ index5Test = index5(round(numel(index5)*percentage)+1:round(numel(index5)));
 
 
 
-indexTrain = [index1Train ; index2Train ; index3Train ; index4Train ; index5Train];
-indexTest =  [index1Test ; index2Test ; index3Test ; index4Test ; index5Test];
+indexTrain = sort([index1Train ; index2Train ; index3Train ; index4Train ; index5Train]);
+indexTest =  sort([index1Test ; index2Test ; index3Test ; index4Test ; index5Test]);
 
 XTrainSet = dataset(indexTrain, :);
 XTestSet = dataset(indexTest, :);
