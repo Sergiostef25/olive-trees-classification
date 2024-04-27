@@ -89,6 +89,7 @@ clear ndviImg1 ndviImg2 evi2Img1 evi2Img2 cireImg1 cireImg2 gndviImg1 gndviImg2 
 %% Creazione Dataset
 notTerrainIdx = find(cultLabel);
 labels = cultLabel(notTerrainIdx);
+treeNumLabels = treeLabel(notTerrainIdx);
 
 green = cat(2, [crop1.DataCube(:,:,22); zeros(m2-m1,n1)], crop2.DataCube(:,:,22));
 red = cat(2, [crop1.DataCube(:,:,26); zeros(m2-m1,n1)], crop2.DataCube(:,:,26));
@@ -96,11 +97,11 @@ redEdge = cat(2, [crop1.DataCube(:,:,37); zeros(m2-m1,n1)], crop2.DataCube(:,:,3
 nir = cat(2, [crop1.DataCube(:,:,46); zeros(m2-m1,n1)], crop2.DataCube(:,:,46));
 
 dataset = table(ndviImg(notTerrainIdx),evi2Img(notTerrainIdx),cireImg(notTerrainIdx),gndviImg(notTerrainIdx),grviImg(notTerrainIdx),psriImg(notTerrainIdx),renImg(notTerrainIdx),saviImg(notTerrainIdx), ...
-    green(notTerrainIdx), red(notTerrainIdx), redEdge(notTerrainIdx), nir(notTerrainIdx), labels, treeLabel(notTerrainIdx),notTerrainIdx,...
+    green(notTerrainIdx), red(notTerrainIdx), redEdge(notTerrainIdx), nir(notTerrainIdx), labels, treeNumLabels,notTerrainIdx,...
     'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','labels','treenum','index'});
 %%
 [datasetWitoutOutliers, outIdx]= rmoutliers(dataset{:,1:12});
-datasetWitoutOutliers = [datasetWitoutOutliers, labels(~outIdx), treeLabel(~outIdx), notTerrainIdx(~outIdx)];
+datasetWitoutOutliers = [datasetWitoutOutliers, labels(~outIdx), treeNumLabels(~outIdx), notTerrainIdx(~outIdx)];
 newDataset = array2table(datasetWitoutOutliers,'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','labels','treenum','index'});
 newLabels = labels(~outIdx);
 figure
@@ -110,6 +111,8 @@ histogram(newDataset.ndvi,'DisplayName','Con outlier rimossi','FaceColor','red')
 legend
 hold off
 
+treeLabel(dataset{outIdx,"index"}) = 0;
+cultLabel(dataset{outIdx,"index"}) = 0;
 %% Creazione Training, Test set e normalizzazione
 [XTrainSet, XTestSet] = createAndDisplayTrainTestSet(newDataset, 0.7, rgbImg);
 [XTrainSet,XTestSet] = normalizeTrainTestSet(XTrainSet,XTestSet);
@@ -159,6 +162,7 @@ testAccuracy = 1-testLoss
 C = confusionmat(YTestSet,Ypredicted);
 figure
 cm = confusionchart(C,cultNameAndCount(:,1));
+displayPredictionResults(rgbImg,XTestSet, YTestSet,Ypredicted)
 %% AUC curve
 AUC = zeros(size(cultNameAndCount,1));
 legends = cell(size(cultNameAndCount,1),1);
@@ -173,6 +177,8 @@ legend(legends, 'location', 'southeast')
     xlabel('False positive rate'); ylabel('True positive rate');
     title('ROC for Classification by KNN')
 hold off
+
+
 %% Training SVM
 rng(1)
 t1 = datetime;
@@ -193,6 +199,7 @@ testAccuracy = 1-testLoss
 C = confusionmat(YTestSet,Ypredicted);
 figure
 cm = confusionchart(C,cultNameAndCount(:,1));
+displayPredictionResults(rgbImg,XTestSet, YTestSet,Ypredicted)
 %% AUC curve
 AUC = zeros(size(cultNameAndCount,1));
 legends = cell(size(cultNameAndCount,1),1);
