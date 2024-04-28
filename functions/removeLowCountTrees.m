@@ -10,6 +10,8 @@ end
 % conteggio tipologie alberi di ulivo
 for i=1:length(cultCounts)
     cultCounts{i,2} = nnz(cultTable.cult == i);
+    cultCounts{i,3} = nnz(cultTable.cult == i & cultTable.location == 0);
+    cultCounts{i,4} = nnz(cultTable.cult == i & cultTable.location == 1);
 end
 
 idx = false(height(cultTable),1);
@@ -27,6 +29,8 @@ for i=1:length(cultCounts)
     if cultCounts{i,2} > threshold
         newCultCounts{k,1} = cultCounts{i,1};
         newCultCounts{k,2} = cultCounts{i,2};
+        newCultCounts{k,3} = cultCounts{i,3};
+        newCultCounts{k,4} = cultCounts{i,4};
         k = k + 1;
     end
 

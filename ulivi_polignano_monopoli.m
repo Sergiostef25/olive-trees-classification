@@ -12,7 +12,7 @@ tabulate(categorical(oliveTreesTable.cult))
 clear cultEncoded
 %% Hypercubes
 % lettura hypercube utili per estrapolare le informazioni iperspettrali
-% delle immagin, sopratutto per visulaizzare le immagini in RGB
+% delle immagini, sopratutto per visulaizzare le immagini in RGB
 
 waves=[386,400.3,405.1,409.9,414.6,419.4,424.1,430.1,436,440.8,445.6,450.3,455.1,482.4,509.7,514.5,519.2,525.2,531.1,535.8,543,550.1,559.6,569.1,620,671,675.7,680.5,685.2,690,694.7,699.4,705.4,711.3,716,720.8,725.5,730.2,735,739.7,744.5,749.2,755.1,761,781.2,801.3,930.5]';
 
@@ -48,7 +48,8 @@ treeNum = 1;
 [newA2, mask2, treeLabel2, cultLabel2, treeNum] = refineSegmentation(A2,oliveTreesTable, newX2, newY2, radius, treeNum);
 
 
-displayLabeledOliveTree(rgbImg1,rgbImg2,cultLabel1,cultLabel2)
+
+displayLabeledOliveTree(rgbImg1,rgbImg2,cultLabel1,cultLabel2, cultNameAndCount)
 %% Maschera HSV per eliminare il terreno dall'immagine segmentata 
 
 terrainMask1 = applyTerrainMask(rgbImg1, mask1, 'Polignano');
@@ -99,22 +100,9 @@ nir = cat(2, [crop1.DataCube(:,:,46); zeros(m2-m1,n1)], crop2.DataCube(:,:,46));
 dataset = table(ndviImg(notTerrainIdx),evi2Img(notTerrainIdx),cireImg(notTerrainIdx),gndviImg(notTerrainIdx),grviImg(notTerrainIdx),psriImg(notTerrainIdx),renImg(notTerrainIdx),saviImg(notTerrainIdx), ...
     green(notTerrainIdx), red(notTerrainIdx), redEdge(notTerrainIdx), nir(notTerrainIdx), labels, treeNumLabels,notTerrainIdx,...
     'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','labels','treenum','index'});
-%%
-[datasetWitoutOutliers, outIdx]= rmoutliers(dataset{:,1:12});
-datasetWitoutOutliers = [datasetWitoutOutliers, labels(~outIdx), treeNumLabels(~outIdx), notTerrainIdx(~outIdx)];
-newDataset = array2table(datasetWitoutOutliers,'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','labels','treenum','index'});
-newLabels = labels(~outIdx);
-figure
-histogram(dataset.ndvi,'DisplayName','Originale','FaceColor','blue');
-hold on
-histogram(newDataset.ndvi,'DisplayName','Con outlier rimossi','FaceColor','red');
-legend
-hold off
 
-treeLabel(dataset{outIdx,"index"}) = 0;
-cultLabel(dataset{outIdx,"index"}) = 0;
 %% Creazione Training, Test set e normalizzazione
-[XTrainSet, XTestSet] = createAndDisplayTrainTestSet(newDataset, 0.7, rgbImg);
+[XTrainSet, XTestSet] = createAndDisplayTrainTestSet(dataset, 0.7, rgbImg);
 [XTrainSet,XTestSet] = normalizeTrainTestSet(XTrainSet,XTestSet);
 
 %% Correlazione
@@ -135,26 +123,16 @@ zlabel(XTestSetNew.Properties.VariableNames{3})
 
 cb = colorbar;                             
 cb.Label.String = 'Labels';
-%% Training e Testing KNN
+%% Training KNN
 rng(1)
 t1 = datetime;
 mdl = fitcknn(XTrainSetNew,YTrainSet,'NumNeighbors',40,'Standardize',1);
-% mdl = fitcknnXTrainSetNew,YTrainSet,'OptimizeHyperparameters','auto',...
-%     'HyperparameterOptimizationOptions',...
-%     struct('AcquisitionFunctionName','expected-improvement-plus'));
-% t = templateKNN;
-% mdl = fitcecoc(XTrainSetNew,YTrainSet,'Learners',t,'ObservationsIn','rows','OptimizeHyperparameters','auto',...
-%     'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
-%     'expected-improvement-plus'))
-
-
 cvmdl = crossval(mdl); %10-fold
-
 t2 = datetime;
 fprintf('Durata training knn -> %s\n',between(t1,t2))
 genError = kfoldLoss(cvmdl)
 trainAcc = 1 -genError
-%%
+%% Testing KNN
 
 [Ypredicted,score,cost] = predict(cvmdl.Trained{1},XTestSetNew);
 testLoss = loss(cvmdl.Trained{1},XTestSetNew,YTestSet)
@@ -163,26 +141,10 @@ C = confusionmat(YTestSet,Ypredicted);
 figure
 cm = confusionchart(C,cultNameAndCount(:,1));
 displayPredictionResults(rgbImg,XTestSet, YTestSet,Ypredicted)
-%% AUC curve
-AUC = zeros(size(cultNameAndCount,1));
-legends = cell(size(cultNameAndCount,1),1);
-figure
-hold on
-for i=1:size(cultNameAndCount,1)
-    [X,Y,T,AUC(i)] = perfcurve(YTestSet,score(:,i),i);
-    plot(X,Y)
-    legends{i} = sprintf('AUC for %s class: %.3f', cultNameAndCount{i,1}, AUC(i));
-end
-legend(legends, 'location', 'southeast')
-    xlabel('False positive rate'); ylabel('True positive rate');
-    title('ROC for Classification by KNN')
-hold off
-
-
+displayAUC(cultNameAndCount,YTestSet,score)
 %% Training SVM
 rng(1)
 t1 = datetime;
-% mdl = fitcsvm(XTrainSetNew,YTrainSet);
 t = templateSVM;
 mdl = fitcecoc(XTrainSetNew,YTrainSet,'Learners',t,'ObservationsIn','rows')
 cvmdl = crossval(mdl); %10-fold
@@ -191,8 +153,7 @@ t2 = datetime;
 fprintf('Durata training svm -> %s\n',between(t1,t2))
 genError = kfoldLoss(cvmdl)
 trainAcc = 1 -genError
-%%
-
+%% Testing SVM
 [Ypredicted,score,cost] = predict(cvmdl.Trained{1},XTestSetNew);
 testLoss = loss(cvmdl.Trained{1},XTestSetNew,YTestSet)
 testAccuracy = 1-testLoss
@@ -200,17 +161,4 @@ C = confusionmat(YTestSet,Ypredicted);
 figure
 cm = confusionchart(C,cultNameAndCount(:,1));
 displayPredictionResults(rgbImg,XTestSet, YTestSet,Ypredicted)
-%% AUC curve
-AUC = zeros(size(cultNameAndCount,1));
-legends = cell(size(cultNameAndCount,1),1);
-figure
-hold on
-for i=1:size(cultNameAndCount,1)
-    [X,Y,T,AUC(i)] = perfcurve(YTestSet,score(:,i),i);
-    plot(X,Y)
-    legends{i} = sprintf('AUC for %s class: %.3f', cultNameAndCount{i,1}, AUC(i));
-end
-legend(legends, 'location', 'southeast')
-    xlabel('False positive rate'); ylabel('True positive rate');
-    title('ROC for Classification by KNN')
-hold off
+displayAUC(cultNameAndCount,YTestSet,score)
