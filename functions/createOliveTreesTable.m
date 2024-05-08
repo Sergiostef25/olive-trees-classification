@@ -28,7 +28,8 @@ monopoliTable = table(monopoliTable.expolat, monopoliTable.expolon, monopoliTabl
 monopoliTable.Properties.VariableNames = ["expolat","expolon","cult","location"];
 
 t = [polignanoTable;monopoliTable];
-
-clear missingCultIndex
+fprintf('Count and Percentage of Olive Tree Types\n')
+tabulate(categorical(t.cult))
+fprintf('\n')
 end
 

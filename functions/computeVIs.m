@@ -47,8 +47,6 @@ sizeChk = [size(hcube, 1), size(hcube, 2)];
 
 
 if isequal(option.BlockSize, sizeChk)
-    computeEvi2(hcube, NIRIdx, RIdx);
-
     switch visName
         case "ndvi"
             B = computeNdvi(hcube, NIRIdx, RIdx);
@@ -59,7 +57,7 @@ if isequal(option.BlockSize, sizeChk)
         case "gndvi"
             B = computeGndvi(hcube, NIRIdx, GIdx);
         case "grvi"
-            B = computeGndvi(hcube, RIdx, GIdx);
+            B = computeGrvi(hcube, NIRIdx, GIdx);
         case "psri"
             B = computePsri(hcube, NIRIdx, RIdx, GIdx);
         case "ren"
@@ -88,7 +86,7 @@ else
         case "gndvi"
             out = apply(bim, @(bs)computeGndvi(bs.Data, NIRIdx, GIdx), 'BlockSize', bSize);
         case "grvi"
-            out = apply(bim, @(bs)computeGrvi(bs.Data, RIdx, GIdx), 'BlockSize', bSize);
+            out = apply(bim, @(bs)computeGrvi(bs.Data, NIRIdx, GIdx), 'BlockSize', bSize);
         case "psri"
             out = apply(bim, @(bs)computePsri(bs.Data, NIRIdx, RIdx, GIdx), 'BlockSize', bSize);
         case "ren"
@@ -133,7 +131,7 @@ end
 NIR = X(:,:,NIRIdx);
 R = X(:,:,RIdx);
 
-out = 2.5*(NIR-R)./(NIR+R+1+eps);
+out = 2.5*(NIR-R)./(NIR+2.4*R+1+eps);
 end
 
 function out = computeGndvi(X, NIRIdx, GIdx)
@@ -147,15 +145,17 @@ G = X(:,:,GIdx);
 out = (NIR-G)./(NIR+G+eps);
 end
 
-function out = computeGrvi(X, RIdx, GIdx)
+function out = computeGrvi(X, NIRIdx, GIdx)
 if isinteger(X)
     X = single(X);
 end
 
-R = X(:,:,RIdx);
+% R = X(:,:,RIdx);
+NIR = X(:,:,NIRIdx);
 G = X(:,:,GIdx);
 
-out = (G-R)./(G+R+eps);
+% out = (G-R)./(G+R+eps);
+out = NIR./(G+eps);
 end
 
 

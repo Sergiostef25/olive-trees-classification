@@ -12,7 +12,7 @@ for i=1:size(cultNameAndCount,1)
 end
 legend(legends, 'location', 'southeast')
     xlabel('False positive rate'); ylabel('True positive rate');
-    title('ROC for Classification by KNN')
+    title('ROC for Classification')
 hold off
 end
 

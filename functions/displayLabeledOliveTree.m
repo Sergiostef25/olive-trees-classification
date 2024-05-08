@@ -21,7 +21,7 @@ c4 = plot(col4, row4, '.', 'MarkerSize', 7,'DisplayName',strcat(num2str(cultName
 title("Polignano")
 hold off
 legend([c1,c2,c3,c4],Location='northoutside')
-clear c1 c2 c3 c4
+% clear c1 c2 c3
 
 [row1, col1] = find(label2 == 1);
 [row2, col2] = find(label2 == 2);
@@ -38,7 +38,7 @@ c4 = plot(col4, row4, '.', 'MarkerSize', 7,'DisplayName',strcat(num2str(cultName
 title("Monopoli")
 hold off
 legend([c1,c2,c3,c4],Location='northoutside')
-clear c1 c2 c3 c4 col1 col2 col3 col4
-clear row1 row2 row3 row4
+% clear c1 c2 c3 col1 col2 col3 col4
+% clear row1 row2 row3 row4
 end
 
