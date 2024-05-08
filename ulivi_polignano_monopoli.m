@@ -2,14 +2,13 @@
 oliveTreesTable = createOliveTreesTable(readtable('new_data/ulivi_in_CROP1_RGB.xlsx'), readtable('new_data/ulivi_in_CROP2_RGB.xlsx'));
 
 oliveTreesTable(oliveTreesTable.cult == "Altro", :) = [];
-%oliveTreesTable{oliveTreesTable.cult ~= "Altro" & oliveTreesTable.cult ~= "Ogliarola barese","cult"} = "Altro";
+
 % encoding delle tipologie di ultivo (da stringa a numero)
 [cultEncoded, cultNameAndCount] = grp2idx(oliveTreesTable.cult);
 oliveTreesTable.cult = cultEncoded;
 
 [oliveTreesTable, cultNameAndCount] = removeLowCountTrees(oliveTreesTable, cultNameAndCount, 11);
-tabulate(categorical(oliveTreesTable.cult))
-clear cultEncoded
+
 %% Hypercubes
 % lettura hypercube utili per estrapolare le informazioni iperspettrali
 % delle immagini, sopratutto per visulaizzare le immagini in RGB
@@ -111,7 +110,8 @@ YTrainSet = XTrainSetNew.labels;
 YTestSet = XTestSetNew.labels;
 XTrainSetNew = removevars(XTrainSetNew,"labels");
 XTestSetNew = removevars(XTestSetNew,"labels");
-numberOfFeatures = size(XTrainSetNew,2)
+numberOfFeatures = size(XTrainSetNew,2);
+fprintf('Number of features selected: %d\n',numberOfFeatures)
 
 scatter3(XTrainSetNew{:,1},XTrainSetNew{:,2},XTrainSetNew{:,3},10,YTrainSet,'filled')
 ax = gca;
@@ -126,39 +126,80 @@ cb.Label.String = 'Labels';
 %% Training KNN
 rng(1)
 t1 = datetime;
-mdl = fitcknn(XTrainSetNew,YTrainSet,'NumNeighbors',40,'Standardize',1);
-cvmdl = crossval(mdl); %10-fold
+knnMdl = fitcknn(XTrainSetNew,YTrainSet,'NumNeighbors',40,'Standardize',1);
+cvKnnMdl = crossval(knnMdl); %10-fold
 t2 = datetime;
 fprintf('Durata training knn -> %s\n',between(t1,t2))
-genError = kfoldLoss(cvmdl)
-trainAcc = 1 -genError
-%% Testing KNN
+knnGenError = kfoldLoss(cvKnnMdl);
+knnTrainAcc = 1 - knnGenError;
 
-[Ypredicted,score,cost] = predict(cvmdl.Trained{1},XTestSetNew);
-testLoss = loss(cvmdl.Trained{1},XTestSetNew,YTestSet)
-testAccuracy = 1-testLoss
-C = confusionmat(YTestSet,Ypredicted);
+fprintf('Knn Train Accuracy: %0.2f%%\n',knnTrainAcc*100)
+%% Testing KNN
+[bestKnnModel, bestKnnTestAccuracy] = findBestModel(cvKnnMdl,XTestSetNew,YTestSet);
+fprintf('Best Knn Model %d with %.2f%% of Test Accuracy\n',bestKnnModel,bestKnnTestAccuracy*100)
+
+[YpredictedKnn,scoreKnn] = predict(cvKnnMdl.Trained{bestKnnModel},XTestSetNew);
+knnTestLoss = loss(cvKnnMdl.Trained{bestKnnModel},XTestSetNew,YTestSet);
+knnTestAccuracy = 1-knnTestLoss;
+
+C = confusionmat(YTestSet,YpredictedKnn);
 figure
-cm = confusionchart(C,cultNameAndCount(:,1));
-displayPredictionResults(rgbImg,XTestSet, YTestSet,Ypredicted)
-displayAUC(cultNameAndCount,YTestSet,score)
+confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized');
+displayPredictionResults(rgbImg,XTestSet, YTestSet,YpredictedKnn)
+displayAUC(cultNameAndCount,YTestSet,scoreKnn)
 %% Training SVM
 rng(1)
 t1 = datetime;
 t = templateSVM;
-mdl = fitcecoc(XTrainSetNew,YTrainSet,'Learners',t,'ObservationsIn','rows')
-cvmdl = crossval(mdl); %10-fold
+svmMdl = fitcecoc(XTrainSetNew,YTrainSet,'Learners',t,'ObservationsIn','rows');
+cvSvmMdl = crossval(svmMdl); %10-fold
 
 t2 = datetime;
 fprintf('Durata training svm -> %s\n',between(t1,t2))
-genError = kfoldLoss(cvmdl)
-trainAcc = 1 -genError
+svMgenError = kfoldLoss(cvSvmMdl);
+svmTrainAcc = 1 - svMgenError;
+fprintf('SVM Train Accuracy: %.2f%%\n',svmTrainAcc*100)
 %% Testing SVM
-[Ypredicted,score,cost] = predict(cvmdl.Trained{1},XTestSetNew);
-testLoss = loss(cvmdl.Trained{1},XTestSetNew,YTestSet)
-testAccuracy = 1-testLoss
-C = confusionmat(YTestSet,Ypredicted);
+[bestSvmModel, bestSvmTestAccuracy] = findBestModel(cvSvmMdl,XTestSetNew,YTestSet);
+fprintf('Best Knn Model %d with %.2f%% of Test Accuracy\n',bestSvmModel,bestSvmTestAccuracy*100)
+
+[YpredictedSvm,scoreSvm] = predict(cvSvmMdl.Trained{bestSvmModel},XTestSetNew);
+svmTestLoss = loss(cvSvmMdl.Trained{bestSvmModel},XTestSetNew,YTestSet);
+svmTestAccuracy = 1-svmTestLoss;
+
+C = confusionmat(YTestSet,YpredictedSvm);
 figure
-cm = confusionchart(C,cultNameAndCount(:,1));
-displayPredictionResults(rgbImg,XTestSet, YTestSet,Ypredicted)
-displayAUC(cultNameAndCount,YTestSet,score)
+confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized');
+displayPredictionResults(rgbImg,XTestSet, YTestSet,YpredictedSvm)
+displayAUC(cultNameAndCount,YTestSet,scoreSvm)
+%% Training Random Forest
+rng(1)
+XTrainTestSetNew = [XTrainSetNew; XTestSetNew];
+XTrainTestSet=[XTrainSet; XTestSet];
+YTrainTestSet = [YTrainSet; YTestSet];
+t1 = datetime;
+rfMdl = TreeBagger(500,XTrainTestSetNew, YTrainTestSet,Method="classification",OOBPrediction="on",Options=statset(UseParallel=true));
+t2 = datetime;
+fprintf('Durata training Random Forest -> %s\n',between(t1,t2))
+% view(rfMdl.Trees{1},Mode="graph")
+rfTestLoss = oobError(rfMdl);
+rfTestAccuracy = 1-rfTestLoss;
+fprintf('Test Random Forest Accuracy: %.2f\n',mean(rfTestAccuracy)*100)
+plot(oobError(rfMdl))
+xlabel("Number of Grown Trees")
+ylabel("Out-of-Bag Classification Error")
+
+[oobLabels, oobScore] = oobPredict(rfMdl);
+ind = randsample(length(oobLabels),10);
+table(YTrainTestSet(ind),oobLabels(ind),VariableNames=["TrueLabel" "PredictedLabel"])
+oobLabels = str2num(cell2mat(oobLabels));
+%%
+C = confusionmat(YTrainTestSet,oobLabels);
+figure
+confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized');
+% Da modificare per il random foreset
+% displayPredictionResults(rgbImg,XTrainTestSet,oobLabels)
+displayAUC(cultNameAndCount,YTrainTestSet,oobScore)
+
+
+

@@ -40,5 +40,9 @@ end
 cultEncoded = grp2idx(cultTable.cult);
 cultTable.cult = cultEncoded;
 
+fprintf('Count and Percentage of Olive Tree Types After Low-Count Tree Removal\n')
+tabulate(categorical(cultTable.cult))
+fprintf('\n')
+
 end
 
