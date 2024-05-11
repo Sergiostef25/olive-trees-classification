@@ -8,7 +8,7 @@ for i=1:length(XTestSetUniqueTrees)
     % correttamente classifcato
     a = nnz(abs(YTestSet(indexTree)-Ypredicted(indexTree)));
     conf(i) = 100-a*100/nnz(indexTree);
-    fprintf('Tree n. %d confidence: %.2f%%\n',i,conf(i))
+    fprintf('Tree n. %d confidence: %.2f%%\n',XTestSetUniqueTrees(i),conf(i))
 end
 end
 
