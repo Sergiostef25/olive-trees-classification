@@ -4,7 +4,6 @@ figure
 imshow(rgbImg)
 
 hold on
-
 idxRightPrediction = YTestSet == Ypredicted;
 percentage = numel(find(idxRightPrediction))*100/numel(idxRightPrediction);
 [row, col] = ind2sub(size(rgbImg,[1,2]),XTestSet{idxRightPrediction,"index"});

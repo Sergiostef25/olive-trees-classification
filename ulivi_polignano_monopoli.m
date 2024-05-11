@@ -129,14 +129,14 @@ t1 = datetime;
 knnMdl = fitcknn(XTrainSetNew,YTrainSet,'NumNeighbors',40,'Standardize',1);
 cvKnnMdl = crossval(knnMdl); %10-fold
 t2 = datetime;
-fprintf('Durata training knn -> %s\n',between(t1,t2))
+fprintf('Durata training KNN -> %s\n',between(t1,t2))
 knnGenError = kfoldLoss(cvKnnMdl);
 knnTrainAcc = 1 - knnGenError;
 
-fprintf('Knn Train Accuracy: %0.2f%%\n',knnTrainAcc*100)
+fprintf('KNN Train Accuracy: %0.2f%%\n',knnTrainAcc*100)
 %% Testing KNN
 [bestKnnModel, bestKnnTestAccuracy] = findBestModel(cvKnnMdl,XTestSetNew,YTestSet);
-fprintf('Best Knn Model %d with %.2f%% of Test Accuracy\n',bestKnnModel,bestKnnTestAccuracy*100)
+fprintf('Best KNN Model %d with %.2f%% of Test Accuracy\n',bestKnnModel,bestKnnTestAccuracy*100)
 
 [YpredictedKnn,scoreKnn] = predict(cvKnnMdl.Trained{bestKnnModel},XTestSetNew);
 knnTestLoss = loss(cvKnnMdl.Trained{bestKnnModel},XTestSetNew,YTestSet);
@@ -147,6 +147,7 @@ figure
 confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized');
 displayPredictionResults(rgbImg,XTestSet, YTestSet,YpredictedKnn)
 displayAUC(cultNameAndCount,YTestSet,scoreKnn)
+treePredictionAccuracy(XTestSet,YTestSet,YpredictedKnn);
 %% Training SVM
 rng(1)
 t1 = datetime;
@@ -155,7 +156,7 @@ svmMdl = fitcecoc(XTrainSetNew,YTrainSet,'Learners',t,'ObservationsIn','rows');
 cvSvmMdl = crossval(svmMdl); %10-fold
 
 t2 = datetime;
-fprintf('Durata training svm -> %s\n',between(t1,t2))
+fprintf('Durata training SVM -> %s\n',between(t1,t2))
 svMgenError = kfoldLoss(cvSvmMdl);
 svmTrainAcc = 1 - svMgenError;
 fprintf('SVM Train Accuracy: %.2f%%\n',svmTrainAcc*100)
@@ -172,6 +173,8 @@ figure
 confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized');
 displayPredictionResults(rgbImg,XTestSet, YTestSet,YpredictedSvm)
 displayAUC(cultNameAndCount,YTestSet,scoreSvm)
+
+treePredictionAccuracy(XTestSet,YTestSet,YpredictedSvm);
 %% Training Random Forest
 rng(1)
 XTrainTestSetNewRF = [XTrainSetNew; XTestSetNew];
@@ -182,24 +185,23 @@ rfMdl = TreeBagger(500,XTrainTestSetNewRF, YTrainTestSetRF,Method="classificatio
 t2 = datetime;
 fprintf('Durata training Random Forest -> %s\n',between(t1,t2))
 % view(rfMdl.Trees{1},Mode="graph")
-rfTestLoss = oobError(rfMdl);
-rfTestAccuracy = 1-rfTestLoss;
-fprintf('Test Random Forest Accuracy: %.2f%%\n',mean(rfTestAccuracy)*100)
-plot(oobError(rfMdl))
+oobLoss = oobError(rfMdl);
+oobAccuracy = 1-oobLoss;
+fprintf('Test Random Forest Accuracy: %.2f%%\n',mean(oobAccuracy)*100)
+plot(oobLoss)
 xlabel("Number of Grown Trees")
 ylabel("Out-of-Bag Classification Error")
 
+%% Testing Random Forest
 [oobLabels, oobScore] = oobPredict(rfMdl);
-ind = randsample(length(oobLabels),10);
-table(YTrainTestSetRF(ind),oobLabels(ind),VariableNames=["TrueLabel" "PredictedLabel"])
 oobLabels = str2num(cell2mat(oobLabels));
-%%
+
 C = confusionmat(YTrainTestSetRF,oobLabels);
 figure
 confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized');
 % Da modificare per il random foreset
-displayPredictionResultsForRF(rgbImg,XTrainTestSetRF,oobLabels)
+displayPredictionResultsForRF(rgbImg,XTrainTestSetRF,oobLabels);
 displayAUC(cultNameAndCount,YTrainTestSetRF,oobScore)
-
+treePredictionAccuracy(XTrainTestSetRF,YTrainTestSetRF,oobLabels);
 
 

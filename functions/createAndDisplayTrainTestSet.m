@@ -37,7 +37,6 @@ hold on
 c1 = plot(b, a, '.', 'MarkerSize', 7,'Color', 'blue','DisplayName','Train set');
 c2 = plot(d, c, '.', 'MarkerSize', 7,'Color', 'red','DisplayName','Test set');
 hold off
-legend([c1,c2])
-clear c1 c2 a b c d
+legend([c1,c2],Location='northeastoutside')
 end
 
