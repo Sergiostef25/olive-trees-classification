@@ -184,7 +184,7 @@ fprintf('Durata training Random Forest -> %s\n',between(t1,t2))
 % view(rfMdl.Trees{1},Mode="graph")
 rfTestLoss = oobError(rfMdl);
 rfTestAccuracy = 1-rfTestLoss;
-fprintf('Test Random Forest Accuracy: %.2f\n',mean(rfTestAccuracy)*100)
+fprintf('Test Random Forest Accuracy: %.2f%%\n',mean(rfTestAccuracy)*100)
 plot(oobError(rfMdl))
 xlabel("Number of Grown Trees")
 ylabel("Out-of-Bag Classification Error")
@@ -198,7 +198,7 @@ C = confusionmat(YTrainTestSet,oobLabels);
 figure
 confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized');
 % Da modificare per il random foreset
-% displayPredictionResults(rgbImg,XTrainTestSet,oobLabels)
+displayPredictionResultsForRF(rgbImg,XTrainTestSet,oobLabels)
 displayAUC(cultNameAndCount,YTrainTestSet,oobScore)
 
 
