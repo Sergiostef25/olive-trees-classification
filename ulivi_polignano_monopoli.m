@@ -161,7 +161,7 @@ svmTrainAcc = 1 - svMgenError;
 fprintf('SVM Train Accuracy: %.2f%%\n',svmTrainAcc*100)
 %% Testing SVM
 [bestSvmModel, bestSvmTestAccuracy] = findBestModel(cvSvmMdl,XTestSetNew,YTestSet);
-fprintf('Best Knn Model %d with %.2f%% of Test Accuracy\n',bestSvmModel,bestSvmTestAccuracy*100)
+fprintf('Best SVM Model %d with %.2f%% of Test Accuracy\n',bestSvmModel,bestSvmTestAccuracy*100)
 
 [YpredictedSvm,scoreSvm] = predict(cvSvmMdl.Trained{bestSvmModel},XTestSetNew);
 svmTestLoss = loss(cvSvmMdl.Trained{bestSvmModel},XTestSetNew,YTestSet);
@@ -174,11 +174,11 @@ displayPredictionResults(rgbImg,XTestSet, YTestSet,YpredictedSvm)
 displayAUC(cultNameAndCount,YTestSet,scoreSvm)
 %% Training Random Forest
 rng(1)
-XTrainTestSetNew = [XTrainSetNew; XTestSetNew];
-XTrainTestSet=[XTrainSet; XTestSet];
-YTrainTestSet = [YTrainSet; YTestSet];
+XTrainTestSetNewRF = [XTrainSetNew; XTestSetNew];
+XTrainTestSetRF=[XTrainSet; XTestSet];
+YTrainTestSetRF = [YTrainSet; YTestSet];
 t1 = datetime;
-rfMdl = TreeBagger(500,XTrainTestSetNew, YTrainTestSet,Method="classification",OOBPrediction="on",Options=statset(UseParallel=true));
+rfMdl = TreeBagger(500,XTrainTestSetNewRF, YTrainTestSetRF,Method="classification",OOBPrediction="on",Options=statset(UseParallel=true));
 t2 = datetime;
 fprintf('Durata training Random Forest -> %s\n',between(t1,t2))
 % view(rfMdl.Trees{1},Mode="graph")
@@ -191,15 +191,15 @@ ylabel("Out-of-Bag Classification Error")
 
 [oobLabels, oobScore] = oobPredict(rfMdl);
 ind = randsample(length(oobLabels),10);
-table(YTrainTestSet(ind),oobLabels(ind),VariableNames=["TrueLabel" "PredictedLabel"])
+table(YTrainTestSetRF(ind),oobLabels(ind),VariableNames=["TrueLabel" "PredictedLabel"])
 oobLabels = str2num(cell2mat(oobLabels));
 %%
-C = confusionmat(YTrainTestSet,oobLabels);
+C = confusionmat(YTrainTestSetRF,oobLabels);
 figure
 confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized');
 % Da modificare per il random foreset
-displayPredictionResultsForRF(rgbImg,XTrainTestSet,oobLabels)
-displayAUC(cultNameAndCount,YTrainTestSet,oobScore)
+displayPredictionResultsForRF(rgbImg,XTrainTestSetRF,oobLabels)
+displayAUC(cultNameAndCount,YTrainTestSetRF,oobScore)
 
 
 
