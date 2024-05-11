@@ -11,7 +11,7 @@ rng(10)
 indexTrain = false(height(dataset),1);
 for i=1:length(unique(dataset.labels))
     labelTrees = unique(dataset{dataset.labels == i,"treenum"});
-    labelTreesTrainNum = randsample(labelTrees, round(length(labelTrees)*0.7));
+    labelTreesTrainNum = randsample(labelTrees, round(length(labelTrees)*percentage));
     
     for j=1:length(labelTreesTrainNum)
         indexTrain = indexTrain | dataset.treenum == labelTreesTrainNum(j);
