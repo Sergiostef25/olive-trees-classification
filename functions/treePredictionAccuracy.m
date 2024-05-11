@@ -10,5 +10,7 @@ for i=1:length(XTestSetUniqueTrees)
     conf(i) = 100-a*100/nnz(indexTree);
     fprintf('Tree n. %d confidence: %.2f%%\n',XTestSetUniqueTrees(i),conf(i))
 end
+    correctlyClassTree = nnz(conf >=60);
+    fprintf('Percentage of correctly classified olive trees, with confidence greater than 60%% is:\n%.2f%% (%d out of %d)\n',correctlyClassTree*100/length(conf),correctlyClassTree,length(conf))
 end
 
