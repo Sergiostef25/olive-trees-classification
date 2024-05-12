@@ -111,6 +111,7 @@ XTestSetNew = removevars(XTestSetNew,"labels");
 numberOfFeatures = size(XTrainSetNew,2);
 fprintf('Number of features selected: %d\n',numberOfFeatures)
 
+figure
 scatter3(XTrainSetNew{:,1},XTrainSetNew{:,2},XTrainSetNew{:,3},10,YTrainSet,'filled')
 ax = gca;
 ax.XDir = 'reverse';

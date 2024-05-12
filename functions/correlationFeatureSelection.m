@@ -5,6 +5,7 @@ coeff = corrcoef(train{:,1:16});
 isupper = logical(triu(ones(size(coeff)),1));
 coeff(isupper) = NaN;
 % Plot results
+figure
 h = heatmap(coeff,'MissingDataColor','w','Colormap',jet);
 labelNames = {'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi','ipvi','rdvi','gosavi','green','red','rededge','nir','class'};
 h.XDisplayLabels = labelNames;
