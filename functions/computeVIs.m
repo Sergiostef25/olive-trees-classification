@@ -64,6 +64,13 @@ if isequal(option.BlockSize, sizeChk)
             B = computeRen(hcube, NIRIdx, REIdx);
         case "savi"
             B = computeSavi(hcube, NIRIdx, RIdx);
+        case "ipvi"
+            B = computeIpvi(hcube, NIRIdx, RIdx);
+        case "rdvi"
+            B = computeRdvi(hcube, NIRIdx, RIdx);
+        case "gosavi"
+            B = computeGosavi(hcube, NIRIdx, RIdx, GIdx);
+        
     end
 
 else
@@ -93,6 +100,12 @@ else
             out = apply(bim, @(bs)computeRen(bs.Data, NIRIdx, REIdx), 'BlockSize', bSize);
         case "savi"
             out = apply(bim, @(bs)computeSavi(bs.Data, NIRIdx, RIdx), 'BlockSize', bSize);
+        case "ipvi"
+            out = apply(bim, @(bs)computeIpvi(bs.Data, NIRIdx, RIdx), 'BlockSize', bSize);
+        case "rdvi"
+            out = apply(bim, @(bs)computeRdvi(bs.Data, NIRIdx, RIdx), 'BlockSize', bSize);
+        case "gosavi"
+            out = apply(bim, @(bs)computeGosavi(bs.Data, NIRIdx, RIdx, GIdx), 'BlockSize', bSize);
     end
 
     B = gather(out);
@@ -194,6 +207,39 @@ R = X(:,:,RIdx);
 l = 0.5;
 
 out = ((NIR-R)./(NIR + R + l + eps))*(1+l);
+end
+
+function out = computeIpvi(X, NIRIdx ,RIdx)  % Infrared Percentage Vegetation Index
+if isinteger(X)
+    X = single(X);
+end
+
+NIR = X(:,:,NIRIdx);
+R = X(:,:,RIdx);
+
+out = (NIR)./(NIR + R + eps);
+end
+
+function out = computeRdvi(X, NIRIdx, RIdx)  % Renormalized Difference Vegetation Index
+if isinteger(X)
+    X = single(X);
+end
+
+NIR = X(:,:,NIRIdx);
+R = X(:,:,RIdx);
+out = (NIR-R)./sqrt((NIR + R + eps));
+end
+
+function out = computeGosavi(X, NIRIdx, RIdx, GIdx)  % Green Optimised Soil Adjusted Vegetation Index
+if isinteger(X)
+    X = single(X);
+end
+
+NIR = X(:,:,NIRIdx);
+R = X(:,:,RIdx);
+G = X(:,:,GIdx);
+
+out = (NIR-G)./(NIR + G + 0.16 + eps);
 end
 
 function mustBeDataCube(hcube)
