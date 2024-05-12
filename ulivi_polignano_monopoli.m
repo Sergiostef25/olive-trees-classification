@@ -21,7 +21,7 @@ crop1=hypercube('new_data/CROP1_47.tif',waves);
 crop2=hypercube('new_data/CROP2_47.tif',waves);
 [rgbImg2, bands2] = colorize(crop2,'Method','rgb','ContrastStretching',true);
 
-
+    
 
 %% Georaster
 [A1, R1, A2, R2, x1, y1, x2, y2] = readGeoRefOliveTrees(oliveTreesTable, ...
@@ -70,22 +70,21 @@ treeLabel2(terrainMask2) = 0;
 mask2 = mask2 | terrainMask2;
 newA2(repmat(mask2, [1 1 3])) = 255;
 %% CalcoloVI
-[ndviImg1,evi2Img1,cireImg1,gndviImg1,grviImg1,psriImg1,renImg1,saviImg1] = computeVisAndApplyMask(crop1, mask1);
-[ndviImg2,evi2Img2,cireImg2,gndviImg2,grviImg2,psriImg2,renImg2,saviImg2] = computeVisAndApplyMask(crop2, mask2);
+[ndviImg1,evi2Img1,cireImg1,gndviImg1,grviImg1,psriImg1,renImg1,saviImg1,ipviImg1,rdviImg1,gosaviImg1] = computeVisAndApplyMask(crop1, mask1);
+[ndviImg2,evi2Img2,cireImg2,gndviImg2,grviImg2,psriImg2,renImg2,saviImg2,ipviImg2,rdviImg2,gosaviImg2] = computeVisAndApplyMask(crop2, mask2);
 %% Merge immagine
 
 [rgbImg, cultLabel, treeLabel] = mergeOliveTreesImages(newA1,newA2,m1,m2,n1, cultLabel1, cultLabel2, treeLabel1, treeLabel2);
 
 
-[ndviImg,evi2Img,cireImg,gndviImg,grviImg,psriImg,renImg,saviImg] = mergeOliveTreesVIs(m2,m1,n1,ndviImg1,evi2Img1,cireImg1, ...
-    gndviImg1,grviImg1,psriImg1,renImg1,saviImg1, ...
-    ndviImg2,evi2Img2,cireImg2,gndviImg2,grviImg2,psriImg2,renImg2,saviImg2);
+[ndviImg,evi2Img,cireImg,gndviImg,grviImg,psriImg,renImg,saviImg,ipviImg,rdviImg,gosaviImg] = mergeOliveTreesVIs(m2,m1,n1,ndviImg1,evi2Img1,cireImg1, ...
+    gndviImg1,grviImg1,psriImg1,renImg1,saviImg1,ipviImg1,rdviImg1,gosaviImg1, ...
+    ndviImg2,evi2Img2,cireImg2,gndviImg2,grviImg2,psriImg2,renImg2,saviImg2,ipviImg2,rdviImg2,gosaviImg2);
 
 clear cultLabel1 cultLabel2 treeLabel1 treeLabel2
-clear ndviImg1 ndviImg2 evi2Img1 evi2Img2 cireImg1 cireImg2 gndviImg1 gndviImg2 grviImg1 grviImg2 psriImg1 psriImg2 renImg1 renImg2 saviImg1 saviImg2;
+clear ndviImg1 ndviImg2 evi2Img1 evi2Img2 cireImg1 cireImg2 gndviImg1 gndviImg2 grviImg1 grviImg2 psriImg1 psriImg2 renImg1 renImg2 saviImg1 saviImg2 ipviImg1 ipviImg2 rdviImg1 rdviImg2 gosaviImg1 gosaviImg2;
 
-%displayVIs(ndviImg,evi2Img,cireImg,gndviImg,grviImg,psriImg,renImg,saviImg);
-
+%displayVIs(ndviImg,evi2Img,cireImg,gndviImg,grviImg,psriImg,renImg,saviImg,ipviImg,rdviImg,gosaviImg);
 %% Creazione Dataset
 notTerrainIdx = find(cultLabel);
 labels = cultLabel(notTerrainIdx);
@@ -96,10 +95,9 @@ red = cat(2, [crop1.DataCube(:,:,26); zeros(m2-m1,n1)], crop2.DataCube(:,:,26));
 redEdge = cat(2, [crop1.DataCube(:,:,37); zeros(m2-m1,n1)], crop2.DataCube(:,:,37));
 nir = cat(2, [crop1.DataCube(:,:,46); zeros(m2-m1,n1)], crop2.DataCube(:,:,46));
 
-dataset = table(ndviImg(notTerrainIdx),evi2Img(notTerrainIdx),cireImg(notTerrainIdx),gndviImg(notTerrainIdx),grviImg(notTerrainIdx),psriImg(notTerrainIdx),renImg(notTerrainIdx),saviImg(notTerrainIdx), ...
+dataset = table(ndviImg(notTerrainIdx),evi2Img(notTerrainIdx),cireImg(notTerrainIdx),gndviImg(notTerrainIdx),grviImg(notTerrainIdx),psriImg(notTerrainIdx),renImg(notTerrainIdx),saviImg(notTerrainIdx),ipviImg(notTerrainIdx),rdviImg(notTerrainIdx),gosaviImg(notTerrainIdx), ...
     green(notTerrainIdx), red(notTerrainIdx), redEdge(notTerrainIdx), nir(notTerrainIdx), labels, treeNumLabels,notTerrainIdx,...
-    'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi', 'green','red','rededge','nir','labels','treenum','index'});
-
+    'VariableNames',{'ndvi','evi2','cire','gndvi','grvi','psri','ren','savi','ipvi','rdvi','gosavi','green','red','rededge','nir','labels','treenum','index'});
 %% Creazione Training, Test set e normalizzazione
 [XTrainSet, XTestSet] = createAndDisplayTrainTestSet(dataset, 0.7, rgbImg);
 [XTrainSet,XTestSet] = normalizeTrainTestSet(XTrainSet,XTestSet);
