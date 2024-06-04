@@ -1,4 +1,4 @@
-function displayVIs(ndviImg,evi2Img,cireImg,gndviImg,grviImg,psriImg,renImg,saviImg)
+function displayVIs(ndviImg,evi2Img,cireImg,gndviImg,grviImg,psriImg,renImg,saviImg,ipviImg,rdviImg,gosaviImg)
 %DISPLAYVIS Summary of this function goes here
 %   Detailed explanation goes here
 figure
@@ -40,5 +40,21 @@ figure
 imagesc(saviImg);
 colorbar
 title('SAVI')
+
+figure
+imagesc(ipviImg);
+colorbar
+title('IPVI')
+
+figure
+imagesc(rdviImg);
+colorbar
+title('RDVI')
+
+figure
+imagesc(gosaviImg);
+colorbar
+title('GOSAVI')
+
 end
 

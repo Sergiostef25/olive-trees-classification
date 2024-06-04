@@ -1,4 +1,4 @@
-%% Lettura coordinate
+%% Coordinates Reading and Tree Selection
 oliveTreesTable = createOliveTreesTable(readtable('new_data/ulivi_in_CROP1_RGB.xlsx'), readtable('new_data/ulivi_in_CROP2_RGB.xlsx'));
 
 oliveTreesTable(oliveTreesTable.cult == "Altro", :) = [];
@@ -9,7 +9,7 @@ oliveTreesTable.cult = cultEncoded;
 
 [oliveTreesTable, cultNameAndCount] = removeLowCountTrees(oliveTreesTable, cultNameAndCount, 11);
 
-%% Hypercubes
+%% Hypercubes and Georaster
 % lettura hypercube utili per estrapolare le informazioni iperspettrali
 % delle immagini, sopratutto per visulaizzare le immagini in RGB
 
@@ -21,17 +21,13 @@ crop1=hypercube('new_data/CROP1_47.tif',waves);
 crop2=hypercube('new_data/CROP2_47.tif',waves);
 [rgbImg2, bands2] = colorize(crop2,'Method','rgb','ContrastStretching',true);
 
-    
-
-%% Georaster
 [A1, R1, A2, R2, x1, y1, x2, y2] = readGeoRefOliveTrees(oliveTreesTable, ...
     'new_data/CROP1_47.tif','new_data/Seg_CROP1.tif',bands1, ...
-    'new_data/CROP2_47.tif','new_data/Seg_CROP2.tif',bands2, false);
+    'new_data/CROP2_47.tif','new_data/Seg_CROP2.tif',bands2, true);
 
 [m1, n1, ~] = size(A1);
 [m2, n2, ~] = size(A2);
-
-%% Da cartesiane a pixel
+%% Labeling and Segmentation Refinement
 [newX1, newY1] = worldToIntrinsic(R1,x1,y1);
 newX1 = round(newX1);
 newY1 = round(newY1);
@@ -46,19 +42,15 @@ treeNum = 1;
 
 [newA2, mask2, treeLabel2, cultLabel2, treeNum] = refineSegmentation(A2,oliveTreesTable, newX2, newY2, radius, treeNum);
 
-
-
 displayLabeledOliveTree(rgbImg1,rgbImg2,cultLabel1,cultLabel2, cultNameAndCount)
-%% Maschera HSV per eliminare il terreno dall'immagine segmentata 
-
+%% HSV mask to remove terrain from segmented image
 terrainMask1 = applyTerrainMask(rgbImg1, mask1, 'Polignano');
 
-% i pixel che prima facevano erroneamente parte di un ulivo ora saranno
-% etichettati come terreno
+% pixels that were previously mistakenly part of an olive tree will now be labelled as land
 cultLabel1(terrainMask1) = 0;
 treeLabel1(terrainMask1) = 0;
 
-% la maschera della segmentazione viene unita a quella del terreno
+% the segmentation mask is merged with the terrain mask
 mask1 = mask1 | terrainMask1;
 newA1(repmat(mask1, [1 1 3])) = 255;
 
@@ -81,10 +73,10 @@ newA2(repmat(mask2, [1 1 3])) = 255;
     gndviImg1,grviImg1,psriImg1,renImg1,saviImg1,ipviImg1,rdviImg1,gosaviImg1, ...
     ndviImg2,evi2Img2,cireImg2,gndviImg2,grviImg2,psriImg2,renImg2,saviImg2,ipviImg2,rdviImg2,gosaviImg2);
 
+displayVIs(ndviImg,evi2Img,cireImg,gndviImg,grviImg,psriImg,renImg,saviImg,ipviImg,rdviImg,gosaviImg);
+
 clear cultLabel1 cultLabel2 treeLabel1 treeLabel2
 clear ndviImg1 ndviImg2 evi2Img1 evi2Img2 cireImg1 cireImg2 gndviImg1 gndviImg2 grviImg1 grviImg2 psriImg1 psriImg2 renImg1 renImg2 saviImg1 saviImg2 ipviImg1 ipviImg2 rdviImg1 rdviImg2 gosaviImg1 gosaviImg2;
-
-%displayVIs(ndviImg,evi2Img,cireImg,gndviImg,grviImg,psriImg,renImg,saviImg,ipviImg,rdviImg,gosaviImg);
 %% Creazione Dataset
 notTerrainIdx = find(cultLabel);
 labels = cultLabel(notTerrainIdx);
