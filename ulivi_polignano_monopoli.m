@@ -124,7 +124,7 @@ fprintf('Durata training KNN -> %s\n',between(t1,t2))
 knnGenError = kfoldLoss(cvKnnMdl,Mode="individual");
 knnTrainAcc = 1 - knnGenError;
 
-fprintf('KNN Training Accuracy: %0.2f%%\n',mean(knnTrainAcc*100))
+fprintf('Average KNN Training Accuracy: %0.2f%%\n',mean(knnTrainAcc*100))
 [bestKnnTestAccuracy, bestKnnModel] = max(knnTrainAcc);
 fprintf('Best KNN Model is the number %d with %.2f%% of Training Accuracy\n',bestKnnModel,bestKnnTestAccuracy*100)
 %% Testing KNN
@@ -149,7 +149,7 @@ t2 = datetime;
 fprintf('Durata training SVM -> %s\n',between(t1,t2))
 svMgenError = kfoldLoss(cvSvmMdl);
 svmTrainAcc = 1 - svMgenError;
-fprintf('SVM Training Accuracy: %0.2f%%\n',mean(svmTrainAcc*100))
+fprintf('Average SVM Training Accuracy: %0.2f%%\n',mean(svmTrainAcc*100))
 [bestSvmTestAccuracy, bestSvmModel] = max(svmTrainAcc);
 fprintf('Best SVM Model is the number %d with %.2f%% of Training Accuracy\n',bestSvmModel,bestSvmTestAccuracy*100)
 %% Testing SVM
@@ -176,7 +176,7 @@ fprintf('Durata training Random Forest -> %s\n',between(t1,t2))
 % view(rfMdl.Trees{1},Mode="graph")
 oobLoss = oobError(rfMdl);
 oobAccuracy = 1-oobLoss;
-fprintf('Test Random Forest Accuracy: %.2f%%\n',mean(oobAccuracy)*100)
+fprintf('Average Training Random Forest Accuracy: %.2f%%\n',mean(oobAccuracy)*100)
 plot(oobLoss)
 xlabel("Number of Grown Trees")
 ylabel("Out-of-Bag Classification Error")
