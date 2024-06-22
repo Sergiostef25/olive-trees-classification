@@ -121,21 +121,20 @@ knnMdl = fitcknn(XTrainSetNew,YTrainSet,'NumNeighbors',40,'Standardize',1);
 cvKnnMdl = crossval(knnMdl); %10-fold
 t2 = datetime;
 fprintf('Durata training KNN -> %s\n',between(t1,t2))
-knnGenError = kfoldLoss(cvKnnMdl);
+knnGenError = kfoldLoss(cvKnnMdl,Mode="individual");
 knnTrainAcc = 1 - knnGenError;
 
-fprintf('KNN Train Accuracy: %0.2f%%\n',knnTrainAcc*100)
+fprintf('KNN Training Accuracy: %0.2f%%\n',mean(knnTrainAcc*100))
+[bestKnnTestAccuracy, bestKnnModel] = max(knnTrainAcc);
+fprintf('Best KNN Model is the number %d with %.2f%% of Training Accuracy\n',bestKnnModel,bestKnnTestAccuracy*100)
 %% Testing KNN
-[bestKnnModel, bestKnnTestAccuracy] = findBestModel(cvKnnMdl,XTestSetNew,YTestSet);
-fprintf('Best KNN Model %d with %.2f%% of Test Accuracy\n',bestKnnModel,bestKnnTestAccuracy*100)
-
 [YpredictedKnn,scoreKnn] = predict(cvKnnMdl.Trained{bestKnnModel},XTestSetNew);
 knnTestLoss = loss(cvKnnMdl.Trained{bestKnnModel},XTestSetNew,YTestSet);
 knnTestAccuracy = 1-knnTestLoss;
 
 C = confusionmat(YTestSet,YpredictedKnn);
 figure
-confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized');
+confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized','ColumnSummary','column-normalized');
 displayPredictionResults(rgbImg,XTestSet, YTestSet,YpredictedKnn)
 displayAUC(cultNameAndCount,YTestSet,scoreKnn)
 treePredictionAccuracy(XTestSet,YTestSet,YpredictedKnn);
@@ -150,18 +149,17 @@ t2 = datetime;
 fprintf('Durata training SVM -> %s\n',between(t1,t2))
 svMgenError = kfoldLoss(cvSvmMdl);
 svmTrainAcc = 1 - svMgenError;
-fprintf('SVM Train Accuracy: %.2f%%\n',svmTrainAcc*100)
+fprintf('SVM Training Accuracy: %0.2f%%\n',mean(svmTrainAcc*100))
+[bestSvmTestAccuracy, bestSvmModel] = max(svmTrainAcc);
+fprintf('Best SVM Model is the number %d with %.2f%% of Training Accuracy\n',bestSvmModel,bestSvmTestAccuracy*100)
 %% Testing SVM
-[bestSvmModel, bestSvmTestAccuracy] = findBestModel(cvSvmMdl,XTestSetNew,YTestSet);
-fprintf('Best SVM Model %d with %.2f%% of Test Accuracy\n',bestSvmModel,bestSvmTestAccuracy*100)
-
 [YpredictedSvm,scoreSvm] = predict(cvSvmMdl.Trained{bestSvmModel},XTestSetNew);
 svmTestLoss = loss(cvSvmMdl.Trained{bestSvmModel},XTestSetNew,YTestSet);
 svmTestAccuracy = 1-svmTestLoss;
 
 C = confusionmat(YTestSet,YpredictedSvm);
 figure
-confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized');
+confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized','ColumnSummary','column-normalized');
 displayPredictionResults(rgbImg,XTestSet, YTestSet,YpredictedSvm)
 displayAUC(cultNameAndCount,YTestSet,scoreSvm)
 
@@ -189,7 +187,7 @@ oobLabels = str2num(cell2mat(oobLabels));
 
 C = confusionmat(YTrainTestSetRF,oobLabels);
 figure
-confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized');
+confusionchart(C,cultNameAndCount(:,1),'RowSummary','row-normalized','ColumnSummary','column-normalized');
 % Da modificare per il random foreset
 displayPredictionResultsForRF(rgbImg,XTrainTestSetRF,oobLabels);
 displayAUC(cultNameAndCount,YTrainTestSetRF,oobScore)
